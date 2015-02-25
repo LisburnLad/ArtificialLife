@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GAF;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 
 namespace ArtificialLife
 {
@@ -20,14 +22,46 @@ namespace ArtificialLife
     Test itsTest;
 
     /// <summary>
-    /// the grid representing the structure of the bot
-    /// </summary>
-    int[,] itsGrid;
-
-    /// <summary>
     /// the output of this bot at each stage of evaluation
     /// </summary>
     char[,] itsOutput;
+
+
+    enum CellType
+    {
+      EmptyCell,          // " " - 0
+
+      // Straight Connections
+      NorthSouth,         // "|" - 1
+      WestEast,           // "─" - 2
+
+      // T Connections
+      WestNorthEast,      // "┴" - 3
+      EastSouthWest,      // "┬" - 4
+      NorthEastSouth,     // "├" - 5
+      SouthWestNorth,     // "┤" - 6
+
+      // L Connections
+      NorthEast,          // "└" - 7
+      EastSouth,          // "┌" - 8
+      SouthWest,          // "┐" - 9
+      WestNorth,          // "┘" - 10
+
+      // Full Connection
+      NorthEastSouthWest, // "┼" - 11
+
+      // Nodes
+      NorthNode,          // "↑" - 12
+      EastNode,           // "→" - 13
+      SouthNode,          // "↓" - 14
+      WestNode            // "←" - 15
+    };
+
+    /// <summary>
+    /// the grid representing the structure of the bot
+    /// </summary>
+    CellType[,] itsGrid;
+
 
 
     /// <summary>
@@ -67,14 +101,14 @@ namespace ArtificialLife
         Console.WriteLine( "Chromosome: " + itsChromosome.ToBinaryString() );
       }
 
-      itsGrid = new int[itsSideLength, itsSideLength];
+      itsGrid = new CellType[itsSideLength, itsSideLength];
 
       for(int row = 0; row < itsSideLength; row++)
       {
         for(int col = 0; col < itsSideLength; col++)
         {
-          
-          int geneValue = 0;
+
+          CellType geneValue = CellType.EmptyCell;
           for(int bit = 0; bit < itsGeneLength; bit++)
           {
             geneValue += Convert.ToInt32( itsChromosome.ToBinaryString( (row * itsSideLength) + col + bit, 1 ) ) * (1 << bit);
@@ -89,7 +123,7 @@ namespace ArtificialLife
 
       if(aShowGrid)
       {
-        ShowGrid();
+        ShowGrid("c:\\grid.bmp");
       }
     } 
 
@@ -179,29 +213,29 @@ namespace ArtificialLife
       {
         for(int col = 0; col < itsSideLength; col++)
         {
-          if(itsGrid[row, col] >= 12 && itsGrid[row, col] <= 15)
+          if(itsGrid[row, col] >= CellType.NorthNode && itsGrid[row, col] <= CellType.WestNode)
           {
             newOutput[row, col] = (CellValue( itsGrid, itsOutput, row, col ) ? '1' : '0');
 
             switch(itsGrid[row, col])
             {
               // case 12: Console.Write("↑"); break;
-              case 12:
+              case CellType.NorthNode:
                 SetCellAbove( newOutput, row, col, newOutput[row, col], direction.below );
                 break;
 
               // case 13: Console.Write("→"); break;
-              case 13:
+              case CellType.EastNode:
                 SetCellRight( newOutput, row, col, newOutput[row, col], direction.left );
                 break;
 
               // case 14: Console.Write("↓"); break;
-              case 14:
+              case CellType.SouthNode:
                 SetCellBelow( newOutput, row, col, newOutput[row, col], direction.above );
                 break;
 
               // case 15: Console.Write("←"); break;
-              case 15:
+              case CellType.WestNode:
                 SetCellLeft( newOutput, row, col, newOutput[row, col], direction.right );
                 break;
             }
@@ -232,7 +266,7 @@ namespace ArtificialLife
     private void SetPath( char[,] newOutput, int row, int col, char aValue, direction aDirection )
     {
       // if the cell has already been set to '1' don't change its value
-      if(itsGrid[row, col] > 0 && itsGrid[row, col] < 12 && newOutput[row, col] != '1' && !(newOutput[row, col] == '0' && aValue == '0'))
+      if(itsGrid[row, col] > 0 && itsGrid[row, col] < CellType.NorthNode && newOutput[row, col] != '1' && !(newOutput[row, col] == '0' && aValue == '0'))
       {
         // set the cell value
         newOutput[row, col] = aValue;
@@ -241,41 +275,41 @@ namespace ArtificialLife
         {
           ///   // straight connections
           ///   case 1:  Console.Write("|");
-          case 1:
+          case CellType.NorthSouth:
             SetCellAbove( newOutput, row, col, aValue, aDirection );
             SetCellBelow( newOutput, row, col, aValue, aDirection );
             break;
 
           ///   case 2:  Console.Write("─");
-          case 2:
+          case CellType.WestEast:
             SetCellLeft( newOutput, row, col, aValue, aDirection );
             SetCellRight( newOutput, row, col, aValue, aDirection );
             break;
 
           ///   // T connections
           ///   case 3:  Console.Write("┴");
-          case 3:
+          case CellType.WestNorthEast:
             SetCellAbove( newOutput, row, col, aValue, aDirection );
             SetCellLeft( newOutput, row, col, aValue, aDirection );
             SetCellRight( newOutput, row, col, aValue, aDirection );
             break;
 
           ///   case 4:  Console.Write("┬");
-          case 4:
+          case CellType.EastSouthWest:
             SetCellBelow( newOutput, row, col, aValue, aDirection );
             SetCellLeft( newOutput, row, col, aValue, aDirection );
             SetCellRight( newOutput, row, col, aValue, aDirection );
             break;
 
           ///   case 5:  Console.Write("├");
-          case 5:
+          case CellType.NorthEastSouth:
             SetCellAbove( newOutput, row, col, aValue, aDirection );
             SetCellBelow( newOutput, row, col, aValue, aDirection );
             SetCellRight( newOutput, row, col, aValue, aDirection );
             break;
 
           ///   case 6:  Console.Write("┤");
-          case 6:
+          case CellType.SouthWestNorth:
             SetCellAbove( newOutput, row, col, aValue, aDirection );
             SetCellBelow( newOutput, row, col, aValue, aDirection );
             SetCellLeft( newOutput, row, col, aValue, aDirection );
@@ -283,32 +317,32 @@ namespace ArtificialLife
 
           ///   // L connections 
           ///   case 7:  Console.Write("└");
-          case 7:
+          case CellType.NorthEast:
             SetCellAbove( newOutput, row, col, aValue, aDirection );
             SetCellRight( newOutput, row, col, aValue, aDirection );
             break;
 
           ///   case 8:  Console.Write("┌");
-          case 8:
+          case CellType.EastSouth:
             SetCellBelow(  newOutput, row, col, aValue, aDirection );
             SetCellRight(  newOutput, row, col, aValue, aDirection );
             break;
 
           ///   case 9:  Console.Write("┐");
-          case 9:
+          case CellType.SouthWest:
             SetCellBelow( newOutput, row, col, aValue, aDirection );
             SetCellLeft( newOutput, row, col, aValue, aDirection );
             break;
 
           ///   case 10: Console.Write("┘");
-          case 10:
+          case CellType.WestNorth:
             SetCellAbove( newOutput, row, col, aValue, aDirection );
             SetCellLeft( newOutput, row, col, aValue, aDirection );
             break;
 
           ///   // full connection
           ///   case 11: Console.Write("┼");
-          case 11:
+          case CellType.NorthEastSouthWest:
             SetCellAbove( newOutput, row, col, aValue, aDirection );
             SetCellBelow( newOutput, row, col, aValue, aDirection );
             SetCellLeft( newOutput, row, col, aValue, aDirection );
@@ -319,35 +353,17 @@ namespace ArtificialLife
     }
 
 
-    ///   case 1:  Console.Write("|");
-    ///   case 2:  Console.Write("─");
-    ///   
-    ///   // T connections
-    ///   case 3:  Console.Write("┴");
-    ///   case 4:  Console.Write("┬");
-    ///   case 5:  Console.Write("├");
-    ///   case 6:  Console.Write("┤");
-    ///   
-    ///   // L connections 
-    ///   case 7:  Console.Write("└");
-    ///   case 8:  Console.Write("┌");
-    ///   case 9:  Console.Write("┐");
-    ///   case 10: Console.Write("┘");
-    ///   
-    ///   // full connection
-    ///   case 11: Console.Write("┼");
-
-
     private void SetCellRight( char[,] newOutput, int row, int col, char aValue, direction aDirection )
     {
+      // test if the cell to the right has a West connection
       if(aDirection != direction.right && col < (itsSideLength - 1)
-       && (itsGrid[row, col + 1] == 2
-        || itsGrid[row, col + 1] == 3
-        || itsGrid[row, col + 1] == 4
-        || itsGrid[row, col + 1] == 6
-        || itsGrid[row, col + 1] == 9
-        || itsGrid[row, col + 1] == 10
-        || itsGrid[row, col + 1] == 11))
+       && (itsGrid[row, col + 1] == CellType.WestEast
+        || itsGrid[row, col + 1] == CellType.WestNorthEast
+        || itsGrid[row, col + 1] == CellType.EastSouthWest
+        || itsGrid[row, col + 1] == CellType.SouthWestNorth
+        || itsGrid[row, col + 1] == CellType.SouthWest
+        || itsGrid[row, col + 1] == CellType.WestNorth
+        || itsGrid[row, col + 1] == CellType.NorthEastSouthWest))
       {
         SetPath( newOutput, row, col + 1, aValue, direction.left );
       }
@@ -355,14 +371,15 @@ namespace ArtificialLife
 
     private void SetCellLeft( char[,] newOutput, int row, int col, char aValue, direction aDirection )
     {
+      // test if the cell to the left has an East connection
       if(aDirection != direction.left && col > 0
-       && (itsGrid[row, col - 1] == 2
-        || itsGrid[row, col - 1] == 3
-        || itsGrid[row, col - 1] == 4
-        || itsGrid[row, col - 1] == 5
-        || itsGrid[row, col - 1] == 7
-        || itsGrid[row, col - 1] == 8
-        || itsGrid[row, col - 1] == 11))
+       && (itsGrid[row, col - 1] == CellType.WestEast
+        || itsGrid[row, col - 1] == CellType.WestNorthEast
+        || itsGrid[row, col - 1] == CellType.EastSouthWest
+        || itsGrid[row, col - 1] == CellType.NorthEastSouth
+        || itsGrid[row, col - 1] == CellType.NorthEast
+        || itsGrid[row, col - 1] == CellType.EastSouth
+        || itsGrid[row, col - 1] == CellType.NorthEastSouthWest))
       {
         SetPath( newOutput, row, col - 1, aValue, direction.right );
       }
@@ -370,14 +387,15 @@ namespace ArtificialLife
 
     private void SetCellBelow( char[,] newOutput, int row, int col, char aValue, direction aDirection )
     {
+      // test if the cell below has a North connection
       if(aDirection != direction.below && row < (itsSideLength - 1)
-       && (itsGrid[row + 1, col] == 1
-        || itsGrid[row + 1, col] == 3
-        || itsGrid[row + 1, col] == 5
-        || itsGrid[row + 1, col] == 6
-        || itsGrid[row + 1, col] == 7
-        || itsGrid[row + 1, col] == 10
-        || itsGrid[row + 1, col] == 11))
+       && (itsGrid[row + 1, col] == CellType.NorthSouth
+        || itsGrid[row + 1, col] == CellType.WestNorthEast
+        || itsGrid[row + 1, col] == CellType.NorthEastSouth
+        || itsGrid[row + 1, col] == CellType.SouthWestNorth
+        || itsGrid[row + 1, col] == CellType.NorthEast
+        || itsGrid[row + 1, col] == CellType.WestNorth
+        || itsGrid[row + 1, col] == CellType.NorthEastSouthWest))
       {
         SetPath( newOutput, row + 1, col, aValue, direction.above );
       }
@@ -385,14 +403,15 @@ namespace ArtificialLife
 
     private void SetCellAbove( char[,] newOutput, int row, int col, char aValue, direction aDirection )
     {
+      // test if the cell above has a North connection
       if(aDirection != direction.above && row > 0
-       && (itsGrid[row - 1, col] == 1
-        || itsGrid[row - 1, col] == 4
-        || itsGrid[row - 1, col] == 5
-        || itsGrid[row - 1, col] == 6
-        || itsGrid[row - 1, col] == 8
-        || itsGrid[row - 1, col] == 9
-        || itsGrid[row - 1, col] == 11))
+       && (itsGrid[row - 1, col] == CellType.NorthSouth
+        || itsGrid[row - 1, col] == CellType.EastSouthWest
+        || itsGrid[row - 1, col] == CellType.NorthEastSouth
+        || itsGrid[row - 1, col] == CellType.SouthWestNorth
+        || itsGrid[row - 1, col] == CellType.EastSouth
+        || itsGrid[row - 1, col] == CellType.SouthWest
+        || itsGrid[row - 1, col] == CellType.NorthEastSouthWest))
       {
         SetPath( newOutput, row - 1, col, aValue, direction.below );
       }
@@ -407,31 +426,31 @@ namespace ArtificialLife
     /// <param name="output"></param>
     /// <param name="row"></param>
     /// <param name="col"></param>
-    private bool CellValue( int[,] grid, char[,] output, int row, int col )
+    private bool CellValue( CellType[,] grid, char[,] output, int row, int col )
     {
       bool cellValue = true;
 
       switch(grid[row, col])
       {
-        case 12:  // "↑"
+        case CellType.NorthNode:  // "↑"
           cellValue &= ValueOfLeftCell( row, col );
           cellValue &= ValueOfRightCell( row, col );
           cellValue &= ValueOfCellBelow( row, col );
           break;
 
-        case 13:  // "→"    
+        case CellType.EastNode:  // "→"    
           cellValue &= ValueOfCellAbove( row, col );
           cellValue &= ValueOfLeftCell( row, col );
           cellValue &= ValueOfCellBelow( row, col );
           break;
 
-        case 14:  // "↓"
+        case CellType.SouthNode:  // "↓"
           cellValue &= ValueOfLeftCell( row, col );
           cellValue &= ValueOfRightCell( row, col );
           cellValue &= ValueOfCellAbove( row, col );
           break;
 
-        case 15:  // "←"
+        case CellType.WestNode:  // "←"
           cellValue &= ValueOfCellAbove( row, col );
           cellValue &= ValueOfRightCell( row, col );
           cellValue &= ValueOfCellBelow( row, col );
@@ -441,47 +460,22 @@ namespace ArtificialLife
       return !cellValue;
     }
 
-    ///   // straight connections
-    ///   case 1:  Console.Write("|");
-    ///   case 2:  Console.Write("─");
-    ///   
-    ///   // T connections
-    ///   case 3:  Console.Write("┴");
-    ///   case 4:  Console.Write("┬");
-    ///   case 5:  Console.Write("├");
-    ///   case 6:  Console.Write("┤");
-    ///   
-    ///   // L connections 
-    ///   case 7:  Console.Write("└");
-    ///   case 8:  Console.Write("┌");
-    ///   case 9:  Console.Write("┐");
-    ///   case 10: Console.Write("┘");
-    ///   
-    ///   // full connection
-    ///   case 11: Console.Write("┼");
-    ///   
-    ///   // nodes
-    ///   case 12: Console.Write("↑");
-    ///   case 13: Console.Write("→");
-    ///   case 14: Console.Write("↓");
-    ///   case 15: Console.Write("←");
-
     private bool ValueOfCellAbove( int aRow, int aCol )
     {
-      // value of cell above
+      // value of cell above - cells with South connection
       if(aRow > 0)
       {
         int row = aRow - 1;
         int col = aCol;
 
-        if(itsGrid[row, col] == 1
-        || itsGrid[row, col] == 4
-        || itsGrid[row, col] == 5
-        || itsGrid[row, col] == 6
-        || itsGrid[row, col] == 8
-        || itsGrid[row, col] == 9
-        || itsGrid[row, col] == 11
-        || itsGrid[row, col] == 14)
+        if(itsGrid[row, col] == CellType.NorthSouth
+        || itsGrid[row, col] == CellType.EastSouthWest
+        || itsGrid[row, col] == CellType.NorthEastSouth
+        || itsGrid[row, col] == CellType.SouthWestNorth
+        || itsGrid[row, col] == CellType.EastSouth
+        || itsGrid[row, col] == CellType.SouthWest
+        || itsGrid[row, col] == CellType.NorthEastSouthWest
+        || itsGrid[row, col] == CellType.SouthNode)
         {
           if(itsOutput[row, col] == '0')
           {
@@ -491,6 +485,8 @@ namespace ArtificialLife
       }
       return true;
     }
+
+
 
     private bool ValueOfCellBelow( int aRow, int aCol )
     {
@@ -500,14 +496,15 @@ namespace ArtificialLife
         int row = aRow + 1;
         int col = aCol;
 
-        if(itsGrid[row, col] == 1
-        || itsGrid[row, col] == 3
-        || itsGrid[row, col] == 5
-        || itsGrid[row, col] == 6
-        || itsGrid[row, col] == 7
-        || itsGrid[row, col] == 10
-        || itsGrid[row, col] == 11
-        || itsGrid[row, col] == 12)
+        // connections with a North output
+        if(itsGrid[row, col] == CellType.NorthSouth
+        || itsGrid[row, col] == CellType.WestNorthEast
+        || itsGrid[row, col] == CellType.NorthEastSouth
+        || itsGrid[row, col] == CellType.SouthWestNorth
+        || itsGrid[row, col] == CellType.NorthEast
+        || itsGrid[row, col] == CellType.WestNorth
+        || itsGrid[row, col] == CellType.NorthEastSouthWest
+        || itsGrid[row, col] == CellType.NorthNode)
         {
           if(itsOutput[row, col] == '0')
           {
@@ -517,7 +514,6 @@ namespace ArtificialLife
       }
       return true;
     }
-
 
     private bool ValueOfRightCell( int aRow, int aCol )
     {
@@ -527,14 +523,15 @@ namespace ArtificialLife
         int row = aRow;
         int col = aCol + 1;
 
-        if(itsGrid[row, col] == 2
-        || itsGrid[row, col] == 3
-        || itsGrid[row, col] == 4
-        || itsGrid[row, col] == 6
-        || itsGrid[row, col] == 9
-        || itsGrid[row, col] == 10
-        || itsGrid[row, col] == 11
-        || itsGrid[row, col] == 15)
+        // connections with a West output
+        if(itsGrid[row, col] == CellType.WestEast
+        || itsGrid[row, col] == CellType.WestNorthEast
+        || itsGrid[row, col] == CellType.EastSouthWest
+        || itsGrid[row, col] == CellType.SouthWestNorth
+        || itsGrid[row, col] == CellType.SouthWest
+        || itsGrid[row, col] == CellType.WestNorth
+        || itsGrid[row, col] == CellType.NorthEastSouthWest
+        || itsGrid[row, col] == CellType.WestNode)
         {
           if(itsOutput[row, col] == '0')
           {
@@ -544,7 +541,6 @@ namespace ArtificialLife
       }
       return true;
     }
-
 
     /// <summary>
     /// get the value of the left hand cell, if it contains a connection into the current cell
@@ -564,14 +560,15 @@ namespace ArtificialLife
         int row = aRow;
         int col = aCol - 1;
 
-        if(itsGrid[row, col] == 2
-        || itsGrid[row, col] == 3
-        || itsGrid[row, col] == 4
-        || itsGrid[row, col] == 5
-        || itsGrid[row, col] == 7
-        || itsGrid[row, col] == 8
-        || itsGrid[row, col] == 11
-        || itsGrid[row, col] == 13)
+        // connnections with an East output
+        if(itsGrid[row, col] == CellType.WestEast
+        || itsGrid[row, col] == CellType.WestNorthEast
+        || itsGrid[row, col] == CellType.EastSouthWest
+        || itsGrid[row, col] == CellType.NorthEastSouth
+        || itsGrid[row, col] == CellType.NorthEast
+        || itsGrid[row, col] == CellType.EastSouth
+        || itsGrid[row, col] == CellType.NorthEastSouthWest
+        || itsGrid[row, col] == CellType.EastNode)
         {
           if(itsOutput[row, col] == '0')
           {
@@ -610,7 +607,7 @@ namespace ArtificialLife
     /// <summary>
     /// write the structure of the grid to the console
     /// </summary>
-    private void ShowGrid()
+    private void ShowGrid( string aImageName )
     {
       Console.WriteLine();
 
@@ -623,32 +620,32 @@ namespace ArtificialLife
           switch(itsGrid[row, col])
           {
             // empty cell
-            case 0: Console.Write( " " ); break;
+            case CellType.EmptyCell: Console.Write( " " ); break;
 
             // straight connections
-            case 1: Console.Write( "|" ); break;
-            case 2: Console.Write( "─" ); break;
+            case CellType.NorthSouth: Console.Write("│"); break;
+            case CellType.WestEast: Console.Write( "─" ); break;
 
             // T connections
-            case 3: Console.Write( "┴" ); break;
-            case 4: Console.Write( "┬" ); break;
-            case 5: Console.Write( "├" ); break;
-            case 6: Console.Write( "┤" ); break;
+            case CellType.WestNorthEast: Console.Write( "┴" ); break;
+            case CellType.EastSouthWest: Console.Write("┬"); break;
+            case CellType.NorthEastSouth: Console.Write( "├" ); break;
+            case CellType.SouthWestNorth: Console.Write("┤"); break;
 
             // L connections 
-            case 7: Console.Write( "└" ); break;
-            case 8: Console.Write( "┌" ); break;
-            case 9: Console.Write( "┐" ); break;
-            case 10: Console.Write( "┘" ); break;
+            case CellType.NorthEast: Console.Write("└"); break;
+            case CellType.EastSouth: Console.Write("┌"); break;
+            case CellType.SouthWest: Console.Write("┐"); break;
+            case CellType.WestNorth: Console.Write("┘"); break;
 
             // full connection
-            case 11: Console.Write( "┼" ); break;
+            case CellType.NorthEastSouthWest: Console.Write("┼"); break;
 
             // nodes
-            case 12: Console.Write( "↑" ); break;
-            case 13: Console.Write( "→" ); break;
-            case 14: Console.Write( "↓" ); break;
-            case 15: Console.Write( "←" ); break;
+            case CellType.NorthNode: Console.Write("↑"); break;
+            case CellType.EastNode: Console.Write("→"); break;
+            case CellType.SouthNode: Console.Write("↓"); break;
+            case CellType.WestNode: Console.Write("←"); break;
           }
 
           Console.Write( " " );
@@ -656,54 +653,287 @@ namespace ArtificialLife
         Console.WriteLine();
       }
       Console.WriteLine( "____________" );
+
+      // create an image of this grid
+      CreateGridImage(aImageName);
+    }
+
+
+    private void CreateGridImage(string aImageName)
+    {
+      int pixelLength = (itsSideLength * 32) + 1;
+
+      Bitmap bitmap = new Bitmap(pixelLength, pixelLength);
+      Graphics graphics = Graphics.FromImage(bitmap);
+
+      graphics.FillRectangle(Brushes.White, 0, 0, pixelLength, pixelLength);
+
+      Pen linePen = new Pen(Color.Black,2);
+      linePen.StartCap = LineCap.Square;
+      linePen.EndCap = LineCap.Square;     
+
+
+      Pen dashPen = new Pen(Color.DarkGray, 2);
+      dashPen.DashStyle = DashStyle.Dash;     
+      
+      for (int row = 0; row < itsSideLength; row++)
+      {
+        if (row < (itsSideLength-1))
+        {
+          graphics.DrawLine(dashPen, 0, (row * 32) + 32, pixelLength, (row * 32)+32);
+        }
+
+        for (int col = 0; col < itsSideLength; col++)
+        {
+          int x = (col * 32);
+          int y = (row * 32);
+
+          if (row == 0)
+          {
+            graphics.DrawLine(dashPen, x, 0, x, pixelLength);
+          }
+
+          switch (itsGrid[row, col])
+          {
+            // empty cell
+            case CellType.EmptyCell: break;
+
+            // straight connections
+            case CellType.NorthSouth:
+              graphics.DrawLine(linePen, x + 16, y, x + 16, y + 32);
+              break;
+            case CellType.WestEast:
+              graphics.DrawLine(linePen, x, y + 16, x + 32, y + 16);
+              break;
+
+            // L connections 
+            case CellType.NorthEast:
+              graphics.DrawLine(linePen, x + 16, y, x + 16, y + 16);
+              graphics.DrawLine(linePen, x + 16, y + 16, x + 32, y + 16);
+              break;
+            case CellType.EastSouth:
+              graphics.DrawLine(linePen, x + 16, y + 16, x + 16, y + 32);
+              graphics.DrawLine(linePen, x + 16, y + 16, x + 32, y + 16);
+              break;
+            case CellType.SouthWest:
+              graphics.DrawLine(linePen, x + 16, y + 16, x + 16, y + 32);
+              graphics.DrawLine(linePen, x, y + 16, x + 16, y + 16);
+              break;
+            case CellType.WestNorth:
+              graphics.DrawLine(linePen, x + 16, y, x + 16, y + 16);
+              graphics.DrawLine(linePen, x, y + 16, x + 16, y + 16);
+              break;
+
+            // T connections
+            case CellType.WestNorthEast:
+              graphics.DrawLine(linePen, x + 16, y, x + 16, y + 16);
+              graphics.DrawLine(linePen, x, y + 16, x + 32, y + 16);
+              break;
+            case CellType.EastSouthWest:
+              graphics.DrawLine(linePen, x + 16, y + 16, x + 16, y + 32);
+              graphics.DrawLine(linePen, x, y + 16, x + 32, y + 16);
+              break;
+            case CellType.NorthEastSouth:
+              graphics.DrawLine(linePen, x + 16, y, x + 16, y + 32);
+              graphics.DrawLine(linePen, x + 16, y + 16, x + 32, y + 16);
+              break;
+            case CellType.SouthWestNorth:
+              graphics.DrawLine(linePen, x + 16, y, x + 16, y + 32);
+              graphics.DrawLine(linePen, x, y + 16, x + 16, y + 16);
+              break;
+
+            // full connection
+            case CellType.NorthEastSouthWest:
+              graphics.DrawLine(linePen, x + 16, y, x + 16, y + 32);
+              graphics.DrawLine(linePen, x, y + 16, x + 32, y + 16);
+              break;
+
+            // nodes
+            case CellType.NorthNode:
+              DrawNorthNode(graphics, linePen, x, y);
+              break;
+            case CellType.EastNode:
+              DrawEastNode(graphics, linePen, x, y);
+              break;
+            case CellType.SouthNode:
+              DrawSouthNode(graphics, linePen, x, y);
+              break;
+            case CellType.WestNode:
+              DrawWestNode(graphics, linePen, x, y);
+              break;
+          }
+        }
+      }
+
+      //graphics.DrawRectangle(linePen, 0, 0, pixelLength, pixelLength);
+
+      linePen.Dispose();
+      dashPen.Dispose();
+
+      bitmap.Save(aImageName);
+    }
+
+
+    private static void DrawWestNode(Graphics graphics, Pen linePen, int x, int y)
+    {
+      using (SolidBrush brush = new SolidBrush(Color.FromArgb(0x7F, 0x92, 0xFF)))
+      {
+        // array of points for top curve
+        Point[] linePoints = { 
+                               new Point(x + 16, y),
+                               new Point(x + 12, y+ 4 ),
+                               new Point(x + 8,  y+ 16),
+                               new Point(x + 12, y+ 28),
+                               new Point(x + 16, y+ 31)                       
+                             };
+
+        // draw the shading for the top curve
+        GraphicsPath path = new GraphicsPath();
+        path.AddCurve(linePoints);
+        graphics.FillPath(brush, path);
+
+        // draw the top curve
+        graphics.DrawCurve(linePen, linePoints);
+
+        // draw the sides
+        graphics.FillRectangle(brush, x + 16, y, 16, 32);
+        graphics.DrawLine(linePen, x + 16, y, x + 32, y);
+        graphics.DrawLine(linePen, x + 32, y, x + 32, y + 32);
+        graphics.DrawLine(linePen, x + 16, y + 32, x + 32, y + 32);
+
+        // draw the top circle
+        int radius = 4;
+        graphics.DrawEllipse(linePen, x, (y + 16) - radius, (radius * 2), (radius * 2));
+      }
     }
 
 
 
+    private static void DrawEastNode(Graphics graphics, Pen linePen, int x, int y)
+    {
+      using (SolidBrush brush = new SolidBrush(Color.FromArgb(0x7F, 0x92, 0xFF)))
+      {
+        // array of points for top curve
+        Point[] linePoints = { 
+                               new Point(x + 16, y),
+                               new Point(x + 20, y+ 4 ),
+                               new Point(x + 24, y+ 16),
+                               new Point(x + 20, y+ 28),
+                               new Point(x + 16, y+ 31)                       
+                             };
+
+        // draw the shading for the top curve
+        GraphicsPath path = new GraphicsPath();
+        path.AddCurve(linePoints);
+        graphics.FillPath(brush, path);
+
+        // draw the top curve
+        graphics.DrawCurve(linePen, linePoints);
+
+        // draw the sides
+        graphics.FillRectangle(brush, x, y, 16, 32);
+        graphics.DrawLine(linePen, x, y, x + 16, y);
+        graphics.DrawLine(linePen, x, y, x, y + 32);
+        graphics.DrawLine(linePen, x, y + 32, x + 16, y + 32);
+
+        // draw the top circle
+        int radius = 4;
+        graphics.DrawEllipse(linePen, (x + 32) - (radius * 2), (y + 16) - radius, (radius * 2), (radius * 2));
+      }
+    }
+
+
+
+    private static void DrawNorthNode(Graphics graphics, Pen linePen, int x, int y)
+    {
+      using (SolidBrush brush = new SolidBrush(Color.FromArgb(0x7F, 0x92, 0xFF))) 
+      {
+        // array of points for top curve
+        Point[] linePoints = { 
+                               new Point(x, y + 16),
+                               new Point(x + 4, y + 12),
+                               new Point(x + 16, y + 8),
+                               new Point(x + 28, y + 12),
+                               new Point(x + 31, y + 16)
+                             };
+
+        // draw the shading for the top curve
+        GraphicsPath path = new GraphicsPath();
+        path.AddCurve(linePoints);
+        graphics.FillPath(brush, path);
+
+        // draw the top curve
+        graphics.DrawCurve(linePen, linePoints); 
+        
+        // draw the sides
+        graphics.FillRectangle(brush, x, y + 16, 32, 16);
+        graphics.DrawLine(linePen, x, y + 16, x, y + 32);
+        graphics.DrawLine(linePen, x, y + 32, x + 32, y + 32);
+        graphics.DrawLine(linePen, x + 32, y + 16, x + 32, y + 32);
+
+        // draw the top circle
+        int radius = 4;
+        graphics.DrawEllipse(linePen, (x + 16) - radius, y, (radius * 2), (radius * 2));
+      }
+    }
+
+
+    private static void DrawSouthNode(Graphics graphics, Pen linePen, int x, int y)
+    {
+      //float tension = 0.8F;
+      //FillMode flMode = FillMode.Winding;
+      using (SolidBrush brush = new SolidBrush(Color.FromArgb(0x7F, 0x92, 0xFF)))
+      {
+        // array of points for top curve
+        Point[] linePoints = { 
+                               new Point(x, y + 16),
+                               new Point(x + 4, y + 20),
+                               new Point(x + 16, y + 24),
+                               new Point(x + 28, y + 20),
+                               new Point(x + 31, y + 16)                       
+                             };
+
+        // draw the shading for the top curve
+        GraphicsPath path = new GraphicsPath();
+        path.AddCurve(linePoints);
+        graphics.FillPath(brush, path);
+
+        // draw the top curve
+        graphics.DrawCurve(linePen, linePoints);      
+
+        // draw the sides
+        graphics.FillRectangle(brush, x, y, 32, 16);
+        graphics.DrawLine(linePen, x, y, x, y + 16);
+        graphics.DrawLine(linePen, x, y, x + 32, y);
+        graphics.DrawLine(linePen, x + 32, y, x + 32, y + 16);
+
+        // draw the top circle
+        int radius = 4;
+        graphics.DrawEllipse(linePen, (x + 16) - radius, (y + 32) - (radius * 2), (radius * 2), (radius * 2));
+      }
+    }
+
+
     /// <summary>
     /// remove unused nodes or connections
-    /// 
-    ///   // empty cell
-    ///   case 0:  Console.Write(" ");
-    ///   
-    ///   // straight connections
-    ///   case 1:  Console.Write("|");
-    ///   case 2:  Console.Write("─");
-    ///   
-    ///   // T connections
-    ///   case 3:  Console.Write("┴");
-    ///   case 4:  Console.Write("┬");
-    ///   case 5:  Console.Write("├");
-    ///   case 6:  Console.Write("┤");
-    ///   
-    ///   // L connections 
-    ///   case 7:  Console.Write("└");
-    ///   case 8:  Console.Write("┌");
-    ///   case 9:  Console.Write("┐");
-    ///   case 10: Console.Write("┘");
-    ///   
-    ///   // full connection
-    ///   case 11: Console.Write("┼");
-    ///   
-    ///   // nodes
-    ///   case 12: Console.Write("↑");
-    ///   case 13: Console.Write("→");
-    ///   case 14: Console.Write("↓");
-    ///   case 15: Console.Write("←");
-    /// 
     /// </summary>
     /// <param name="grid"></param>
     private void PruneGrid()
     {
-      int[,] lastGrid = new int[itsSideLength, itsSideLength];
+      CellType[,] lastGrid = new CellType[itsSideLength, itsSideLength];
 
+      int pass = 0;
       do
       {
+        //ShowGrid("c:\\prune_" + pass + ".bmp");
+
         // copy the current bot grid to the 'lastGrid' 
         CopyGrid( lastGrid );
 
         RemoveNodesWithNoOutput();
         RemoveNodesWithNoInput();
+
+        pass++;
       }
       while(CompareWithLastGrid( lastGrid ) == false);
     }
@@ -714,7 +944,7 @@ namespace ArtificialLife
     /// </summary>
     /// <param name="output"></param>
     /// <param name="lastOutput"></param>
-    private void CopyGrid( int[,] lastGrid )
+    private void CopyGrid(CellType[,] lastGrid)
     {
       for(int row = 0; row < itsSideLength; row++)
       {
@@ -732,7 +962,7 @@ namespace ArtificialLife
     /// <param name="output"></param>
     /// <param name="lastOutput"></param>
     /// <returns>true if the grids are identical</returns>
-    private bool CompareWithLastGrid( int[,] lastGrid )
+    private bool CompareWithLastGrid(CellType[,] lastGrid)
     {
       for(int row = 0; row < itsSideLength; row++)
       {
@@ -749,6 +979,8 @@ namespace ArtificialLife
     }
 
 
+
+
     private void RemoveNodesWithNoInput()
     {
       // remove nodes with no input
@@ -756,115 +988,122 @@ namespace ArtificialLife
       {
         for(int col = 0; col < itsSideLength; col++)
         {
-          // test for input from above    
+          // test for input from above - connections that point south
           bool above = (row > 0
-           && (itsGrid[row - 1, col] == 1
-           || itsGrid[row - 1, col] == 4
-           || itsGrid[row - 1, col] == 5
-           || itsGrid[row - 1, col] == 6
-           || itsGrid[row - 1, col] == 8
-           || itsGrid[row - 1, col] == 9
-           || itsGrid[row - 1, col] == 11
-           || itsGrid[row - 1, col] == 14));
+           && (itsGrid[row - 1, col] == CellType.NorthSouth
+           || itsGrid[row - 1, col] == CellType.EastSouthWest
+           || itsGrid[row - 1, col] == CellType.NorthEastSouth
+           || itsGrid[row - 1, col] == CellType.SouthWestNorth
+           || itsGrid[row - 1, col] == CellType.EastSouth
+           || itsGrid[row - 1, col] == CellType.SouthWest
+           || itsGrid[row - 1, col] == CellType.NorthEastSouthWest
+           || itsGrid[row - 1, col] == CellType.SouthNode));
 
-          // test for input from below
+          // test for input from below - connections that point north
           bool below = (row < (itsSideLength - 1)
-           && (itsGrid[row + 1, col] == 1
-           || itsGrid[row + 1, col] == 3
-           || itsGrid[row + 1, col] == 5
-           || itsGrid[row + 1, col] == 6
-           || itsGrid[row + 1, col] == 7
-           || itsGrid[row + 1, col] == 10
-           || itsGrid[row + 1, col] == 11
-           || itsGrid[row + 1, col] == 14));
+           && (itsGrid[row + 1, col] == CellType.NorthSouth
+           || itsGrid[row + 1, col] == CellType.WestNorthEast
+           || itsGrid[row + 1, col] == CellType.NorthEastSouth
+           || itsGrid[row + 1, col] == CellType.SouthWestNorth
+           || itsGrid[row + 1, col] == CellType.NorthEast
+           || itsGrid[row + 1, col] == CellType.WestNorth
+           || itsGrid[row + 1, col] == CellType.NorthEastSouthWest
+           || itsGrid[row + 1, col] == CellType.NorthNode));
 
-          // test for input from left
+          // test for input from left - connections that point east
           bool left = (col > 0
-           && (itsGrid[row, col - 1] == 2
-           || itsGrid[row, col - 1] == 3
-           || itsGrid[row, col - 1] == 4
-           || itsGrid[row, col - 1] == 5
-           || itsGrid[row, col - 1] == 7
-           || itsGrid[row, col - 1] == 8
-           || itsGrid[row, col - 1] == 11
-           || itsGrid[row, col - 1] == 13));
+           && (itsGrid[row, col - 1] == CellType.WestEast
+           || itsGrid[row, col - 1] == CellType.WestNorthEast
+           || itsGrid[row, col - 1] == CellType.EastSouthWest
+           || itsGrid[row, col - 1] == CellType.NorthEastSouth
+           || itsGrid[row, col - 1] == CellType.NorthEast
+           || itsGrid[row, col - 1] == CellType.EastSouth
+           || itsGrid[row, col - 1] == CellType.NorthEastSouthWest
+           || itsGrid[row, col - 1] == CellType.EastNode));
 
-          // test for input from right
+          // test for input from right - connections that point west
           bool right = (col < (itsSideLength - 1)
-           && (itsGrid[row, col + 1] == 2
-           || itsGrid[row, col + 1] == 3
-           || itsGrid[row, col + 1] == 4
-           || itsGrid[row, col + 1] == 6
-           || itsGrid[row, col + 1] == 9
-           || itsGrid[row, col + 1] == 10
-           || itsGrid[row, col + 1] == 11
-           || itsGrid[row, col + 1] == 15));
+           && (itsGrid[row, col + 1] == CellType.WestEast
+           || itsGrid[row, col + 1] == CellType.WestNorthEast
+           || itsGrid[row, col + 1] == CellType.EastSouthWest
+           || itsGrid[row, col + 1] == CellType.SouthWestNorth
+           || itsGrid[row, col + 1] == CellType.SouthWest
+           || itsGrid[row, col + 1] == CellType.WestNorth
+           || itsGrid[row, col + 1] == CellType.NorthEastSouthWest
+           || itsGrid[row, col + 1] == CellType.WestNode));
 
-          if(!above && !below && !left && !right)
+
+          // keep connections at the edges of the grid
+          if( itsGrid[row, col] >= CellType.NorthNode 
+          || ( row > 0 && row < (itsSideLength - 1) ) && (col > 0 && col < (itsSideLength - 1)))
           {
-            itsGrid[row, col] = 0;
-          }
 
-          // vertical '|'
-          if(itsGrid[row, col] == 1 && !above && !below)
-          {
-            itsGrid[row, col] = 0;
-          }
+            if(!above && !below && !left && !right)
+            {
+              itsGrid[row, col] = 0;
+            }
 
-          // horizontal '-'
-          if(itsGrid[row, col] == 2 && !left && !right)
-          {
-            itsGrid[row, col] = 0;
-          }
+            // vertical '|'
+            if(itsGrid[row, col] == CellType.NorthSouth && !above && !below)
+            {
+              itsGrid[row, col] = 0;
+            }
 
-
-          ///   case 3:  Console.Write("┴");                            
-          if(itsGrid[row, col] == 3 && !left && !above && !right)
-          {
-            itsGrid[row, col] = 0;
-          }
-
-          ///   case 4:  Console.Write("┬");
-          if(itsGrid[row, col] == 4 && !left && !below && !right)
-          {
-            itsGrid[row, col] = 0;
-          }
-
-          ///   case 5:  Console.Write("├");
-          if(itsGrid[row, col] == 5 && !above && !right && !below)
-          {
-            itsGrid[row, col] = 0;
-          }
-
-          ///   case 6:  Console.Write("┤");
-          if(itsGrid[row, col] == 6 && !below && !left && !above)
-          {
-            itsGrid[row, col] = 0;
-          }
+            // horizontal '-'
+            if(itsGrid[row, col] == CellType.WestEast && !left && !right)
+            {
+              itsGrid[row, col] = 0;
+            }
 
 
-          ///   case 7:  Console.Write("└");                              
-          if(itsGrid[row, col] == 7 && !above && !right)
-          {
-            itsGrid[row, col] = 0;
-          }
+            /// "┴"                           
+            if(itsGrid[row, col] == CellType.WestNorthEast && !left && !above && !right)
+            {
+              itsGrid[row, col] = 0;
+            }
 
-          ///   case 8:  Console.Write("┌");
-          if(itsGrid[row, col] == 8 && !below && !right)
-          {
-            itsGrid[row, col] = 0;
-          }
+            /// "┬"
+            if(itsGrid[row, col] == CellType.EastSouthWest && !left && !below && !right)
+            {
+              itsGrid[row, col] = 0;
+            }
 
-          ///   case 9:  Console.Write("┐");
-          if(itsGrid[row, col] == 9 && !left && !below)
-          {
-            itsGrid[row, col] = 0;
-          }
+            /// "├"
+            if(itsGrid[row, col] == CellType.NorthEastSouth && !above && !right && !below)
+            {
+              itsGrid[row, col] = 0;
+            }
 
-          ///   case 10: Console.Write("┘");
-          if(itsGrid[row, col] == 10 && !left && !above)
-          {
-            itsGrid[row, col] = 0;
+            /// "┤"
+            if(itsGrid[row, col] == CellType.SouthWestNorth && !below && !left && !above)
+            {
+              itsGrid[row, col] = 0;
+            }
+
+
+            /// "└"                            
+            if(itsGrid[row, col] == CellType.NorthEast && !above && !right)
+            {
+              itsGrid[row, col] = 0;
+            }
+
+            /// "┌"
+            if(itsGrid[row, col] == CellType.EastSouth && !below && !right)
+            {
+              itsGrid[row, col] = 0;
+            }
+
+            /// "┐"
+            if(itsGrid[row, col] == CellType.SouthWest && !left && !below)
+            {
+              itsGrid[row, col] = 0;
+            }
+
+            /// "┘"
+            if(itsGrid[row, col] == CellType.WestNorth && !left && !above)
+            {
+              itsGrid[row, col] = 0;
+            }
           }
         }
       }
@@ -876,45 +1115,45 @@ namespace ArtificialLife
       {
         for(int col = 0; col < itsSideLength; col++)
         {
-          // remove any nodes that point into an empty cell
+          // remove any nodes that point only into an empty cell
           if(itsGrid[row, col] == 0)
           {
             // examine cell above
             if(row > 0
-            && (itsGrid[row - 1, col] == 1
-            || itsGrid[row - 1, col] == 8
-            || itsGrid[row - 1, col] == 9
-            || itsGrid[row - 1, col] == 14))
+            && (itsGrid[row - 1, col] == CellType.NorthSouth
+            || itsGrid[row - 1, col] == CellType.EastSouth
+            || itsGrid[row - 1, col] == CellType.SouthWest
+            || itsGrid[row - 1, col] == CellType.SouthNode))
             {
               itsGrid[row - 1, col] = 0;
             }
 
             // examine cell below
             if(row < (itsSideLength - 1)
-            && (itsGrid[row + 1, col] == 1
-              || itsGrid[row + 1, col] == 7
-              || itsGrid[row + 1, col] == 10
-              || itsGrid[row + 1, col] == 12))
+            && (itsGrid[row + 1, col] == CellType.NorthSouth
+              || itsGrid[row + 1, col] == CellType.NorthEast
+              || itsGrid[row + 1, col] == CellType.WestNorth
+              || itsGrid[row + 1, col] == CellType.NorthNode))
             {
               itsGrid[row + 1, col] = 0;
             }
 
             // examine cell to left
             if(col > 0
-            && (itsGrid[row, col - 1] == 2
-            || itsGrid[row, col - 1] == 7
-            || itsGrid[row, col - 1] == 8
-            || itsGrid[row, col - 1] == 13))
+            && (itsGrid[row, col - 1] == CellType.WestEast
+            || itsGrid[row, col - 1] == CellType.NorthEast
+            || itsGrid[row, col - 1] == CellType.EastSouth
+            || itsGrid[row, col - 1] == CellType.EastNode))
             {
               itsGrid[row, col - 1] = 0;
             }
 
             // examine cell to right
             if(col < (itsSideLength - 1)
-            && (itsGrid[row, col + 1] == 2
-            || itsGrid[row, col + 1] == 9
-            || itsGrid[row, col + 1] == 10
-            || itsGrid[row, col + 1] == 15))
+            && (itsGrid[row, col + 1] == CellType.WestEast
+            || itsGrid[row, col + 1] == CellType.SouthWest
+            || itsGrid[row, col + 1] == CellType.WestNorth
+            || itsGrid[row, col + 1] == CellType.WestNode))
             {
               itsGrid[row, col + 1] = 0;
             }
@@ -924,19 +1163,14 @@ namespace ArtificialLife
           //
           // remove nodes with outputs into each other
 
-          //12: Console.Write("↑");
-          //13: Console.Write("→");
-          //14: Console.Write("↓");
-          //15: Console.Write("←");
-
           // vertical pair
-          if(itsGrid[row, col] == 12 && (row > 0 && itsGrid[row - 1, col] == 14))
+          if(itsGrid[row, col] == CellType.NorthNode && (row > 0 && itsGrid[row - 1, col] == CellType.SouthNode))
           {
             itsGrid[row, col] = 0;
           }
 
           // horizontal pair
-          if(itsGrid[row, col] == 15 && (col > 0 && itsGrid[row, col - 1] == 13))
+          if(itsGrid[row, col] == CellType.WestNode && (col > 0 && itsGrid[row, col - 1] == CellType.EastNode))
           {
             itsGrid[row, col] = 0;
           }
