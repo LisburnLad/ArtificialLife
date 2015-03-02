@@ -25,7 +25,7 @@ namespace ArtificialLife
       evolution.itsShowOnTerminate = true;
       //evolution.StartEvolution();
       evolution.EvaluateSpecificChromosome();
-
+      
       Console.ReadLine();
     }
   }

@@ -25,7 +25,7 @@ namespace ArtificialLife
     }
     
     public void StartEvolution()
-    {
+    {      
       const double crossoverProbability = 0.65;
       const double mutationProbability = 0.08;
       const int elitismPercentage = 5;
@@ -74,12 +74,12 @@ namespace ArtificialLife
 
       if (itsShowOnTerminate)
       {
-      //decode chromosome
+        // decode chromosome
         double fitness = CreateAndEvaluateBot( chromosome, itsSideLength, true );
 
-      Console.WriteLine( "Final Chromosome Fitmess: " + fitness );
-      Console.WriteLine( "Evaluations: " + e.Evaluations );
-    }
+        Console.WriteLine( "Final Chromosome Fitmess: " + fitness );
+        Console.WriteLine( "Evaluations: " + e.Evaluations );      
+      }
 
       itsFitness = chromosome.Fitness;
 
@@ -91,7 +91,7 @@ namespace ArtificialLife
     /// </summary>
     /// <param name="chromosome"></param>
     /// <returns></returns>
-    private double EvaluateChromosome( Chromosome chromosome )
+    private double EvaluateChromosome(Chromosome chromosome)
     {
       double score = CreateAndEvaluateBot(chromosome, itsSideLength, false);
       return score;
@@ -102,32 +102,9 @@ namespace ArtificialLife
     /// function used for testing of a specific chromosome
     /// </summary>
     public void EvaluateSpecificChromosome()
-    {
-      string testChromosome = @"10010" +
-                               "10010" +
-                               "10010" +
-                               "11001" +
-                               "00010" + // end of line 0
-                               "01011" +
-                               "00001" +
-                               "10010" +
-                               "10110" +
-                               "00001" + // end of line 1  
-                               "01101" +
-                               "10001" +
-                               "10001" +
-                               "10001" +
-                               "10001" + // end of line 2  
-                               "10010" +
-                               "10010" +
-                               "10010" +
-                               "10010" +
-                               "00000" +  // end of line 3 
-                               "00000" +
-                               "11000" +
-                               "00001" +
-                               "11000" +
-                               "10010"; // end of line 4
+    {      
+      string testChromosome = @"1110111010110001100100010010110000110010101100000100001111001100101000000000000000000\
+                                000000000000000000001100000001110001010010011100011011101001001111011010101";
 
       int sideLength = Bot.GetSideLengthFromChromosome(testChromosome);
 

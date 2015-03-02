@@ -62,7 +62,7 @@ namespace ArtificialLife
 
       // Delay Nodes
       NorthDelay,         // "▲" - 16
-      EastDelay,          // "►" - 17 - 10001
+      EastDelay,          // "►" - 17
       SouthDelay,         // "▼" - 18
       WestDelay           // "◄" - 19
 
@@ -129,31 +129,31 @@ namespace ArtificialLife
 
       try
       {
-      itsGrid = new CellType[itsSideLength, itsSideLength];
+        itsGrid = new CellType[itsSideLength, itsSideLength];
 
-      for(int row = 0; row < itsSideLength; row++)
-      {
-        for(int col = 0; col < itsSideLength; col++)
+        for (int row = 0; row < itsSideLength; row++)
         {
-          CellType geneValue = CellType.EmptyCell;
-          for(int bit = 0; bit < itsGeneLength; bit++)
-          {            
-            int position = (row * itsGeneLength * itsSideLength) + (col * itsGeneLength) + bit;
-            geneValue += Convert.ToInt32( itsChromosome.ToBinaryString( position, 1 ) ) * (1 << (itsGeneLength - (bit + 1)));
-          }
+          for (int col = 0; col < itsSideLength; col++)
+          {
 
-          itsGrid[row, col] = geneValue;
+            CellType geneValue = CellType.EmptyCell;
+            for (int bit = 0; bit < itsGeneLength; bit++)
+            {
+              geneValue += Convert.ToInt32(itsChromosome.ToBinaryString((row * itsSideLength) + col + bit, 1)) * (1 << bit);
+            }
+
+            itsGrid[row, col] = geneValue;
+          }
+        }
+
+        // remove cells with no connections
+        PruneGrid(aShowGrid);
+
+        if (aShowGrid)
+        {
+          ShowGrid("c:\\grid.bmp");
         }
       }
-
-      // remove cells with no connections
-      PruneGrid(aShowGrid);
-
-      if(aShowGrid)
-      {
-        ShowGrid("c:\\grid.bmp");
-      }
-    } 
 
       catch
       {
@@ -236,15 +236,7 @@ namespace ArtificialLife
       {
         for(int col = 0; col < itsSideLength; col++)
         {
-          // retain delay node output
-          if(itsOutput[row, col] == '>' || itsOutput[row, col] == '>')
-          {
-            newOutput[row, col] = itsOutput[row, col];
-          }
-          else
-          {
-            newOutput[row, col] = '-';
-          }
+          newOutput[row, col] = '-';
         }
       }
 
@@ -282,59 +274,6 @@ namespace ArtificialLife
               // case 15: Console.Write("←"); break;
               case CellType.WestNode:
                 SetCellLeft( newOutput, row, col, newOutput[row, col], direction.right );
-                break;
-            }
-          }
-
-          if(itsGrid[row, col] >= CellType.NorthDelay && itsGrid[row, col] <= CellType.WestDelay)
-          {
-            bool cellValue = CellValue( itsGrid, itsOutput, row, col );
-            
-            char output = '0';
-
-            // if the current node value is '>' then output will be 1
-            if(newOutput[row, col] == '>')
-            {
-              // test if the output should be switched next time
-              if(cellValue == false)
-              {
-                newOutput[row, col] = '<';
-              }
-
-              output = '1';
-            }
-            else
-            {
-              // test if the output should be switched next time
-              if(cellValue == true)
-              {
-                newOutput[row, col] = '>';
-              }
-
-              // if the current node value is '<' then output will be 0
-              output = '0';
-            }
-
-            switch(itsGrid[row, col])
-            {
-              
-              case CellType.NorthDelay:
-                SetCellAbove( newOutput, row, col, output, direction.below );
-                break;
-
-              
-              case CellType.EastDelay:
-                SetCellRight( newOutput, row, col, output, direction.left );
-                break;
-
-              
-              case CellType.SouthDelay:
-                SetCellBelow( newOutput, row, col, output, direction.above );
-                break;
-
-              
-              case CellType.WestDelay:
-                SetCellLeft( newOutput, row, col, output, direction.right );
                 break;
             }
           }
@@ -528,15 +467,6 @@ namespace ArtificialLife
     {
       bool cellValue = true;
 
-      // test if this is a delay node
-      // - delay nodes will do an OR operation on the inputs
-      bool delayNode = false;
-      if(grid[row, col] >= CellType.NorthDelay && grid[row, col] <= CellType.WestDelay)
-      {
-        delayNode = true;
-        cellValue = false;
-      }
-
       switch(grid[row, col])
       {
         case CellType.NorthNode:  // "↑"
@@ -562,127 +492,11 @@ namespace ArtificialLife
           cellValue &= ValueOfRightCell( row, col );
           cellValue &= ValueOfCellBelow( row, col );
           break;
-
-        case CellType.NorthDelay:  // "▲"
-          cellValue |= ValueOfLeftCell( row, col );         
-          cellValue |= ValueOfRightCell( row, col );        
-          cellValue |= ValueOfCellBelow( row, col );        
-          break;
-
-        case CellType.EastDelay:  // "►"    
-          cellValue |= ValueOfCellAbove( row, col );
-          cellValue |= ValueOfLeftCell( row, col );
-          cellValue |= ValueOfCellBelow( row, col );
-          break;
-
-        case CellType.SouthDelay:  // "▼"
-          cellValue |= ValueOfLeftCell( row, col );
-          cellValue |= ValueOfRightCell( row, col );
-          cellValue |= ValueOfCellAbove( row, col );
-          break;
-
-        case CellType.WestDelay:  // "◄"
-          cellValue |= ValueOfCellAbove( row, col );
-          cellValue |= ValueOfRightCell( row, col );
-          cellValue |= ValueOfCellBelow( row, col );
-          break;
-      }
-
-      if(delayNode)
-      {
-        return cellValue;
       }
 
       return !cellValue;
     }
 
-
-    /// <summary>
-    /// Test if the cell at the specified location has a 'South' output
-    /// </summary>
-    /// <param name="row"></param>
-    /// <param name="col"></param>
-    /// <returns></returns>
-    private bool TestForSouthConnection( int row, int col )
-    {
-      return itsGrid[row, col] == CellType.NorthSouth
-          || itsGrid[row, col] == CellType.EastSouthWest
-          || itsGrid[row, col] == CellType.NorthEastSouth
-          || itsGrid[row, col] == CellType.SouthWestNorth
-          || itsGrid[row, col] == CellType.EastSouth
-          || itsGrid[row, col] == CellType.SouthWest
-          || itsGrid[row, col] == CellType.NorthEastSouthWest
-          || itsGrid[row, col] == CellType.SouthNode
-          || itsGrid[row, col] == CellType.SouthDelay;
-    }
-
-
-    /// <summary>
-    /// Test if the cell at the specified location has a 'North' output
-    /// </summary>
-    /// <param name="row"></param>
-    /// <param name="col"></param>
-    /// <returns></returns>
-    private bool TestForNorthConnection( int row, int col )
-    {
-      return itsGrid[row, col] == CellType.NorthSouth
-          || itsGrid[row, col] == CellType.WestNorthEast
-          || itsGrid[row, col] == CellType.NorthEastSouth
-          || itsGrid[row, col] == CellType.SouthWestNorth
-          || itsGrid[row, col] == CellType.NorthEast
-          || itsGrid[row, col] == CellType.WestNorth
-          || itsGrid[row, col] == CellType.NorthEastSouthWest
-          || itsGrid[row, col] == CellType.NorthNode
-          || itsGrid[row, col] == CellType.NorthDelay;
-    }
-
-
-    /// <summary>
-    /// Test if the cell at the specified location has a 'West' output
-    /// </summary>
-    /// <param name="row"></param>
-    /// <param name="col"></param>
-    /// <returns></returns>
-    private bool TestForWestConnection( int row, int col )
-    {
-      return itsGrid[row, col] == CellType.WestEast
-          || itsGrid[row, col] == CellType.WestNorthEast
-          || itsGrid[row, col] == CellType.EastSouthWest
-          || itsGrid[row, col] == CellType.SouthWestNorth
-          || itsGrid[row, col] == CellType.SouthWest
-          || itsGrid[row, col] == CellType.WestNorth
-          || itsGrid[row, col] == CellType.NorthEastSouthWest
-          || itsGrid[row, col] == CellType.WestNode
-          || itsGrid[row, col] == CellType.WestDelay;
-    }
-
-
-    /// <summary>
-    /// Test if the cell at the specified location has a 'East' output
-    /// </summary>
-    /// <param name="row"></param>
-    /// <param name="col"></param>
-    /// <returns></returns>
-    private bool TestForEastConnection( int row, int col )
-    {
-      return itsGrid[row, col] == CellType.WestEast
-          || itsGrid[row, col] == CellType.WestNorthEast
-          || itsGrid[row, col] == CellType.EastSouthWest
-          || itsGrid[row, col] == CellType.NorthEastSouth
-          || itsGrid[row, col] == CellType.NorthEast
-          || itsGrid[row, col] == CellType.EastSouth
-          || itsGrid[row, col] == CellType.NorthEastSouthWest
-          || itsGrid[row, col] == CellType.EastNode
-          || itsGrid[row, col] == CellType.EastDelay;
-    }
-
-
-    /// <summary>
-    /// if the cell above has an output of zero and has a connection into this cell then return false 
-    /// </summary>
-    /// <param name="aRow"></param>
-    /// <param name="aCol"></param>
-    /// <returns></returns>
     private bool ValueOfCellAbove( int aRow, int aCol )
     {
       // value of cell above - cells with South connection
@@ -691,7 +505,14 @@ namespace ArtificialLife
         int row = aRow - 1;
         int col = aCol;
 
-        if(TestForSouthConnection( row, col ))
+        if(itsGrid[row, col] == CellType.NorthSouth
+        || itsGrid[row, col] == CellType.EastSouthWest
+        || itsGrid[row, col] == CellType.NorthEastSouth
+        || itsGrid[row, col] == CellType.SouthWestNorth
+        || itsGrid[row, col] == CellType.EastSouth
+        || itsGrid[row, col] == CellType.SouthWest
+        || itsGrid[row, col] == CellType.NorthEastSouthWest
+        || itsGrid[row, col] == CellType.SouthNode)
         {
           if(itsOutput[row, col] == '0')
           {
@@ -702,12 +523,8 @@ namespace ArtificialLife
       return true;
     }
 
-    /// <summary>
-    /// if the cell below has an output of zero and has a connection into this cell then return false 
-    /// </summary>
-    /// <param name="aRow"></param>
-    /// <param name="aCol"></param>
-    /// <returns></returns>
+
+
     private bool ValueOfCellBelow( int aRow, int aCol )
     {
       // value of cell below
@@ -717,7 +534,14 @@ namespace ArtificialLife
         int col = aCol;
 
         // connections with a North output
-        if(TestForNorthConnection( row, col ))
+        if(itsGrid[row, col] == CellType.NorthSouth
+        || itsGrid[row, col] == CellType.WestNorthEast
+        || itsGrid[row, col] == CellType.NorthEastSouth
+        || itsGrid[row, col] == CellType.SouthWestNorth
+        || itsGrid[row, col] == CellType.NorthEast
+        || itsGrid[row, col] == CellType.WestNorth
+        || itsGrid[row, col] == CellType.NorthEastSouthWest
+        || itsGrid[row, col] == CellType.NorthNode)
         {
           if(itsOutput[row, col] == '0')
           {
@@ -728,12 +552,6 @@ namespace ArtificialLife
       return true;
     }
 
-    /// <summary>
-    /// if the cell to the right has an output of zero and has a connection into this cell then return false 
-    /// </summary>
-    /// <param name="aRow"></param>
-    /// <param name="aCol"></param>
-    /// <returns></returns>
     private bool ValueOfRightCell( int aRow, int aCol )
     {
       // value of right cell
@@ -743,7 +561,14 @@ namespace ArtificialLife
         int col = aCol + 1;
 
         // connections with a West output
-        if(TestForWestConnection( row, col ))
+        if(itsGrid[row, col] == CellType.WestEast
+        || itsGrid[row, col] == CellType.WestNorthEast
+        || itsGrid[row, col] == CellType.EastSouthWest
+        || itsGrid[row, col] == CellType.SouthWestNorth
+        || itsGrid[row, col] == CellType.SouthWest
+        || itsGrid[row, col] == CellType.WestNorth
+        || itsGrid[row, col] == CellType.NorthEastSouthWest
+        || itsGrid[row, col] == CellType.WestNode)
         {
           if(itsOutput[row, col] == '0')
           {
@@ -753,7 +578,6 @@ namespace ArtificialLife
       }
       return true;
     }
-    
 
     /// <summary>
     /// get the value of the left hand cell, if it contains a connection into the current cell
@@ -774,7 +598,14 @@ namespace ArtificialLife
         int col = aCol - 1;
 
         // connnections with an East output
-        if(TestForEastConnection( row, col ))
+        if(itsGrid[row, col] == CellType.WestEast
+        || itsGrid[row, col] == CellType.WestNorthEast
+        || itsGrid[row, col] == CellType.EastSouthWest
+        || itsGrid[row, col] == CellType.NorthEastSouth
+        || itsGrid[row, col] == CellType.NorthEast
+        || itsGrid[row, col] == CellType.EastSouth
+        || itsGrid[row, col] == CellType.NorthEastSouthWest
+        || itsGrid[row, col] == CellType.EastNode)
         {
           if(itsOutput[row, col] == '0')
           {
@@ -809,9 +640,6 @@ namespace ArtificialLife
     }
 
     #endregion
-
-
-    #region Node Drawing
 
     /// <summary>
     /// write the structure of the grid to the console
@@ -890,34 +718,24 @@ namespace ArtificialLife
 
 
       Pen dashPen = new Pen(Color.DarkGray, 2);
-      dashPen.DashStyle = DashStyle.Dash;
-
-      // draw grid lines
-      for(int row = 0; row < itsSideLength; row++)
-      {
-        if(row < (itsSideLength - 1))
-        {
-          graphics.DrawLine( dashPen, 0, (row * 32) + 32, pixelLength, (row * 32) + 32 );
-        }
-
-        for(int col = 0; col < itsSideLength; col++)
-        {
-          int x = (col * 32);
-          int y = (row * 32);
-
-          if(row == 0)
-          {
-            graphics.DrawLine( dashPen, x, 0, x, pixelLength );
-          }
-        }
-      }
+      dashPen.DashStyle = DashStyle.Dash;     
       
       for (int row = 0; row < itsSideLength; row++)
       {
+        if (row < (itsSideLength-1))
+        {
+          graphics.DrawLine(dashPen, 0, (row * 32) + 32, pixelLength, (row * 32)+32);
+        }
+
         for (int col = 0; col < itsSideLength; col++)
         {
           int x = (col * 32);
           int y = (row * 32);
+
+          if (row == 0)
+          {
+            graphics.DrawLine(dashPen, x, 0, x, pixelLength);
+          }
 
           switch (itsGrid[row, col])
           {
@@ -1016,310 +834,267 @@ namespace ArtificialLife
     }
 
 
-    /// <summary>
-    /// Draw the main shape of a node
-    /// </summary>
-    /// <param name="graphics"></param>
-    /// <param name="linePen"></param>
-    /// <param name="linePoints"></param>
-    /// <param name="sidePoints"></param>
-    private static void DrawNode( Graphics graphics, Pen linePen, Point[] linePoints, Point[] sidePoints )
+    private static void DrawWestNode(Graphics graphics, Pen linePen, int x, int y)
     {
-      using(SolidBrush brush = new SolidBrush( Color.FromArgb( 0x7F, 0x92, 0xFF ) ))
+      using (SolidBrush brush = new SolidBrush(Color.FromArgb(0x7F, 0x92, 0xFF)))
       {
+        // array of points for top curve
+        Point[] linePoints = { 
+                               new Point(x + 16, y),
+                               new Point(x + 12, y+ 4 ),
+                               new Point(x + 8,  y+ 16),
+                               new Point(x + 12, y+ 28),
+                               new Point(x + 16, y+ 31)                       
+                             };
+
         // draw the shading for the top curve
         GraphicsPath path = new GraphicsPath();
-        path.AddCurve( linePoints );
-        path.AddLines( sidePoints );
-        graphics.FillPath( brush, path );
-      }
-
-      // draw the top curve
-      graphics.DrawCurve( linePen, linePoints );
-
-      // draw the sides        
-      graphics.DrawLines( linePen, sidePoints );
-    }
-
-
-    /// <summary>
-    /// Draw the main shape for a delay node
-    /// </summary>
-    /// <param name="graphics"></param>
-    /// <param name="linePen"></param>
-    /// <param name="linePoints"></param>
-    /// <param name="sidePoints"></param>
-    private static void DrawDelay( Graphics graphics, Pen linePen, Point[] linePoints, Point[] sidePoints )
-    {
-      using(SolidBrush brush = new SolidBrush( Color.FromArgb( 0x00, 0x9B, 0x0E ) ))
-      {
-        // draw the shading for the top curve
-        GraphicsPath path = new GraphicsPath();
-        path.AddLines( linePoints );
-        path.AddLines( sidePoints );
-        graphics.FillPath( brush, path );
+        path.AddCurve(linePoints);
+        graphics.FillPath(brush, path);
 
         // draw the top curve
-        graphics.DrawLines( linePen, linePoints );
+        graphics.DrawCurve(linePen, linePoints);
 
-        // draw the sides        
-        graphics.DrawLines( linePen, sidePoints );
+        // draw the sides
+        graphics.FillRectangle(brush, x + 16, y, 16, 32);
+        graphics.DrawLine(linePen, x + 16, y, x + 32, y);
+        graphics.DrawLine(linePen, x + 32, y, x + 32, y + 32);
+        graphics.DrawLine(linePen, x + 16, y + 32, x + 32, y + 32);
+
+        // draw the top circle
+        int radius = 4;
+        graphics.DrawEllipse(linePen, x, (y + 16) - radius, (radius * 2), (radius * 2));
       }
     }
 
 
-    private static Point[] GetNorthSidePoints( int x, int endX, int midY, int endY )
+
+    private static void DrawEastNode(Graphics graphics, Pen linePen, int x, int y)
     {
-      Point[] sidePoints = { 
-                               new Point(x, midY),                               
-                               new Point(x, endY),                               
-                               new Point(endX, endY),
-                               new Point(endX, midY)                    
-                             };
-      return sidePoints;
-    }
-
-    private static Point[] GetEastSidePoints( int x, int y, int midX, int endY )
-    {
-      Point[] sidePoints = { 
-                               new Point(midX, y),
-                               new Point(x, y),                               
-                               new Point(x, endY),
-                               new Point(midX, endY)                    
-                             };
-      return sidePoints;
-    }
-
-    private static Point[] GetSouthSidePoints( int x, int y, int endX, int midY )
-    {
-      Point[] sidePoints = { 
-                             new Point(x, midY),                               
-                             new Point(x, y),                               
-                             new Point(endX, y),
-                             new Point(endX, midY)                    
-                           };
-      return sidePoints;
-    }
-
-    private static Point[] GetWestSidePoints( int y, int midX, int endX, int endY )
-    {
-      Point[] sidePoints = { 
-                               new Point(midX, y),                               
-                               new Point(endX, y),                               
-                               new Point(endX, endY),
-                               new Point(midX, endY)                    
-                             };
-      return sidePoints;
-    }
-
-    private static void DrawWestNode( Graphics graphics, Pen linePen, int x, int y )
-    {
-      int mid = 16;
-      int width = 32;
-      int midX = x + mid;
-      int endX = x + width;
-      int midY = y + mid;
-      int endY = y + width;
-
-      // array of points for top curve
-      Point[] linePoints = { 
-                               new Point(midX,   y),
-                               new Point(x + 12, y+ 4 ),
-                               new Point(x + 8,  y+ mid),
-                               new Point(x + 12, y+ 28),
-                               new Point(midX,   endY - 1)                       
-                             };
-
-      Point[] sidePoints = GetWestSidePoints( y, midX, endX, endY );
-
-      DrawNode( graphics, linePen, linePoints, sidePoints );
-
-      // draw the top circle
-      int radius = 4;
-      graphics.DrawEllipse( linePen, x, (midY) - radius, (radius * 2), (radius * 2) );
-    }
-
-    private static void DrawEastNode( Graphics graphics, Pen linePen, int x, int y )
-    {
-      int mid = 16;
-      int width = 32;
-      int midX = x + mid;
-      int endX = x + width;
-      int midY = y + mid;
-      int endY = y + width;
-
-      // array of points for top curve
-      Point[] linePoints = { 
-                               new Point(midX, y),
+      using (SolidBrush brush = new SolidBrush(Color.FromArgb(0x7F, 0x92, 0xFF)))
+      {
+        // array of points for top curve
+        Point[] linePoints = { 
+                               new Point(x + 16, y),
                                new Point(x + 20, y+ 4 ),
-                               new Point(x + 24, midY),
+                               new Point(x + 24, y+ 16),
                                new Point(x + 20, y+ 28),
-                               new Point(midX, endY - 1)                       
+                               new Point(x + 16, y+ 31)                       
                              };
 
-      Point[] sidePoints = GetEastSidePoints( x, y, midX, endY );
+        // draw the shading for the top curve
+        GraphicsPath path = new GraphicsPath();
+        path.AddCurve(linePoints);
+        graphics.FillPath(brush, path);
 
-      DrawNode( graphics, linePen, linePoints, sidePoints );
+        // draw the top curve
+        graphics.DrawCurve(linePen, linePoints);
 
-      // draw the top circle
-      int radius = 4;
-      graphics.DrawEllipse( linePen, (endX) - (radius * 2), (midY) - radius, (radius * 2), (radius * 2) );
+        // draw the sides
+        graphics.FillRectangle(brush, x, y, 16, 32);
+        graphics.DrawLine(linePen, x, y, x + 16, y);
+        graphics.DrawLine(linePen, x, y, x, y + 32);
+        graphics.DrawLine(linePen, x, y + 32, x + 16, y + 32);
+
+        // draw the top circle
+        int radius = 4;
+        graphics.DrawEllipse(linePen, (x + 32) - (radius * 2), (y + 16) - radius, (radius * 2), (radius * 2));
+      }
     }
 
-    private static void DrawNorthNode( Graphics graphics, Pen linePen, int x, int y )
-    {
-      int mid = 16;
-      int width = 32;
-      int midX = x + mid;
-      int endX = x + width;
-      int midY = y + mid;
-      int endY = y + width;
 
-      // array of points for top curve
-      Point[] linePoints = { 
-                               new Point(x, midY),
+
+    private static void DrawNorthNode(Graphics graphics, Pen linePen, int x, int y)
+    {
+      using (SolidBrush brush = new SolidBrush(Color.FromArgb(0x7F, 0x92, 0xFF))) 
+      {
+        // array of points for top curve
+        Point[] linePoints = { 
+                               new Point(x, y + 16),
                                new Point(x + 4, y + 12),
-                               new Point(midX, y + 8),
+                               new Point(x + 16, y + 8),
                                new Point(x + 28, y + 12),
-                               new Point(endX - 1, midY)
+                               new Point(x + 31, y + 16)
                              };
 
-      Point[] sidePoints = GetNorthSidePoints( x, endX, midY, endY );
+        // draw the shading for the top curve
+        GraphicsPath path = new GraphicsPath();
+        path.AddCurve(linePoints);
+        graphics.FillPath(brush, path);
 
-      DrawNode( graphics, linePen, linePoints, sidePoints );
+        // draw the top curve
+        graphics.DrawCurve(linePen, linePoints); 
+        
+        // draw the sides
+        graphics.FillRectangle(brush, x, y + 16, 32, 16);
+        graphics.DrawLine(linePen, x, y + 16, x, y + 32);
+        graphics.DrawLine(linePen, x, y + 32, x + 32, y + 32);
+        graphics.DrawLine(linePen, x + 32, y + 16, x + 32, y + 32);
 
-      // draw the top circle
-      int radius = 4;
-      graphics.DrawEllipse( linePen, (midX) - radius, y, (radius * 2), (radius * 2) );
+        // draw the top circle
+        int radius = 4;
+        graphics.DrawEllipse(linePen, (x + 16) - radius, y, (radius * 2), (radius * 2));
+      }
     }
-    
-    private static void DrawSouthNode( Graphics graphics, Pen linePen, int x, int y )
+
+
+    private static void DrawSouthNode(Graphics graphics, Pen linePen, int x, int y)
     {
-      int mid = 16;
-      int width = 32;
-      int midX = x + mid;
-      int endX = x + width;
-      int midY = y + mid;
-      int endY = y + width;
+      using (SolidBrush brush = new SolidBrush(Color.FromArgb(0x7F, 0x92, 0xFF)))
+      {
+        // array of points for top curve
+        Point[] linePoints = { 
+                               new Point(x, y + 16),
+                               new Point(x + 4, y + 20),
+                               new Point(x + 16, y + 24),
+                               new Point(x + 28, y + 20),
+                               new Point(x + 31, y + 16)                       
+                             };
 
-      // array of points for top curve
-      Point[] linePoints = { 
-                             new Point(x, midY),
-                             new Point(x + 4, y + 20),
-                             new Point(midX, y + 24),
-                             new Point(x + 28, y + 20),
-                             new Point(endX - 1, midY)                       
-                           };
+        // draw the shading for the top curve
+        GraphicsPath path = new GraphicsPath();
+        path.AddCurve(linePoints);
+        graphics.FillPath(brush, path);
 
-      Point[] sidePoints = GetSouthSidePoints( x, y, endX, midY );
+        // draw the top curve
+        graphics.DrawCurve(linePen, linePoints);      
 
-      DrawNode( graphics, linePen, linePoints, sidePoints );
+        // draw the sides
+        graphics.FillRectangle(brush, x, y, 32, 16);
+        graphics.DrawLine(linePen, x, y, x, y + 16);
+        graphics.DrawLine(linePen, x, y, x + 32, y);
+        graphics.DrawLine(linePen, x + 32, y, x + 32, y + 16);
 
-      // draw the top circle
-      int radius = 4;
-      graphics.DrawEllipse( linePen, (midX) - radius, (endY) - (radius * 2), (radius * 2), (radius * 2) );
+        // draw the top circle
+        int radius = 4;
+        graphics.DrawEllipse(linePen, (x + 16) - radius, (y + 32) - (radius * 2), (radius * 2), (radius * 2));
+      }
     }
-
-
-    //
-    // Draw Delay Nodes
-    //
 
 
     private static void DrawWestDelay(Graphics graphics, Pen linePen, int x, int y)
     {
-      int mid = 16;
-      int width = 32;
-      int midX = x + mid;
-      int endX = x + width;
-      int midY = y + mid;
-      int endY = y + width;
+      using (SolidBrush brush = new SolidBrush(Color.FromArgb(0x00, 0x9B, 0x0E)))
+      {
+        // array of points for top curve
+        Point[] linePoints = { 
+                               new Point(x + 15, y ),                               
+                               new Point(x     , y + 15),
+                               new Point(x     , y + 16),
+                               new Point(x + 15, y + 31)                       
+                             };
 
-      // array of points for top curve
-      Point[] linePoints = { 
-                              new Point(midX - 1, y ),                               
-                              new Point(x     , midY - 1),
-                              new Point(x     , midY),
-                              new Point(midX - 1, endY - 1)                       
-                            };
+        // draw the shading for the top curve
+        GraphicsPath path = new GraphicsPath();
+        path.AddLines(linePoints);
+        graphics.FillPath(brush, path);
 
-      Point[] sidePoints = GetWestSidePoints( y, midX, endX, endY );
+        graphics.FillRectangle(brush, x + 15, y, 17, 32);
 
-      DrawDelay( graphics, linePen, linePoints, sidePoints );
+        // draw the top curve
+        graphics.DrawLines(linePen, linePoints);
+
+        // draw the sides
+        
+        graphics.DrawLine(linePen, x + 16, y, x + 32, y);
+        graphics.DrawLine(linePen, x + 32, y, x + 32, y + 32);
+        graphics.DrawLine(linePen, x + 16, y + 32, x + 32, y + 32);
+      }
     }
-    
+
+
+
     private static void DrawEastDelay(Graphics graphics, Pen linePen, int x, int y)
     {
-      int mid = 16;
-      int width = 32;
-      int midX = x + mid;
-      int endX = x + width;
-      int midY = y + mid;
-      int endY = y + width;
-
-      // array of points for top curve
-      Point[] linePoints = { 
-                               new Point(midX + 1, y ),
-                               new Point(endX, y + mid - 1),
-                               new Point(endX, y + mid),
-                               new Point(midX + 1, endY - 1)                       
+      using (SolidBrush brush = new SolidBrush(Color.FromArgb(0x00, 0x9B, 0x0E)))
+      {
+        // array of points for top curve
+        Point[] linePoints = { 
+                               new Point(x + 17, y ),
+                               new Point(x + 32, y + 15),
+                               new Point(x + 32, y + 16),
+                               new Point(x + 17, y + 31)                       
                              };
 
-      Point[] sidePoints = GetEastSidePoints( x, y, midX, endY );
+        // draw the shading for the top curve
+        GraphicsPath path = new GraphicsPath();
+        path.AddLines(linePoints);
+        graphics.FillPath(brush, path);
 
-      DrawDelay( graphics, linePen, linePoints, sidePoints );
+
+        graphics.FillRectangle(brush, x, y, 17, 32);
+
+        // draw the top curve
+        graphics.DrawLines(linePen, linePoints);
+
+        // draw the sides
+        
+        graphics.DrawLine(linePen, x, y, x + 16, y);
+        graphics.DrawLine(linePen, x, y, x, y + 32);
+        graphics.DrawLine(linePen, x, y + 32, x + 16, y + 32);
+      }
     }
 
 
 
-    private static void DrawNorthDelay( Graphics graphics, Pen linePen, int x, int y )
+    private static void DrawNorthDelay(Graphics graphics, Pen linePen, int x, int y)
     {
-      int mid = 16;
-      int width = 32;
-      int midX = x + mid;
-      int endX = x + width;
-      int midY = y + mid;
-      int endY = y + width;
-
-      // array of points for top curve
-      Point[] linePoints = { 
-                               new Point(x     , midY - 1),
-                               new Point(midX - 1, y ),
-                               new Point(midX, y ),
-                               new Point(endX - 1, midY - 1)
+      using (SolidBrush brush = new SolidBrush(Color.FromArgb(0x00, 0x9B, 0x0E)))
+      {
+        // array of points for top curve
+        Point[] linePoints = { 
+                               new Point(x     , y + 15),
+                               new Point(x + 15, y ),
+                               new Point(x + 16, y ),
+                               new Point(x + 31, y + 15)
                              };
 
-      Point[] sidePoints = GetNorthSidePoints( x, endX, midY, endY );
+        // draw the shading for the top curve
+        GraphicsPath path = new GraphicsPath();
+        path.AddLines(linePoints);
+        graphics.FillPath(brush, path);
+        graphics.FillRectangle(brush, x, y + 15, 32, 17);
 
-      DrawDelay( graphics, linePen, linePoints, sidePoints );
+        // draw the top curve
+        graphics.DrawLines(linePen, linePoints);
+
+        // draw the sides        
+        graphics.DrawLine(linePen, x, y + 16, x, y + 32);
+        graphics.DrawLine(linePen, x, y + 32, x + 32, y + 32);
+        graphics.DrawLine(linePen, x + 32, y + 16, x + 32, y + 32);
+      }
     }
 
 
-    private static void DrawSouthDelay( Graphics graphics, Pen linePen, int x, int y )
-    {
-      int mid = 16;
-      int width = 32;
-      int midX = x + mid;
-      int endX = x + width;
-      int midY = y + mid;
-      int endY = y + width;
-
-      // array of points for top curve
-      Point[] linePoints = { 
-                               new Point(x     , midY + 1),
-                               new Point(midX - 1, endY),
-                               new Point(midX, endY),
-                               new Point(endX - 1, midY + 1)                       
+    private static void DrawSouthDelay(Graphics graphics, Pen linePen, int x, int y)
+    {      
+      using (SolidBrush brush = new SolidBrush(Color.FromArgb(0x00, 0x9B, 0x0E)))
+      {
+        // array of points for top curve
+        Point[] linePoints = { 
+                               new Point(x     , y + 17),
+                               new Point(x + 15, y + 32),
+                               new Point(x + 16, y + 32),
+                               new Point(x + 31, y + 17)                       
                              };
 
-      Point[] sidePoints = GetSouthSidePoints( x, y, endX, midY );
+        // draw the shading for the top curve
+        GraphicsPath path = new GraphicsPath();
+        path.AddLines(linePoints);
+        graphics.FillPath(brush, path);
 
-      DrawDelay( graphics, linePen, linePoints, sidePoints );
+        graphics.FillRectangle(brush, x, y, 32, 17);
+
+        // draw the top curve
+        graphics.DrawLines(linePen, linePoints);
+
+        // draw the sides        
+        graphics.DrawLine(linePen, x, y, x, y + 16);
+        graphics.DrawLine(linePen, x, y, x + 32, y);
+        graphics.DrawLine(linePen, x + 32, y, x + 32, y + 16);
+      }
     }
 
-
-    #endregion Node Drawing
-    
 
     /// <summary>
     /// remove unused nodes or connections
@@ -1399,16 +1174,48 @@ namespace ArtificialLife
         for(int col = 0; col < itsSideLength; col++)
         {
           // test for input from above - connections that point south
-          bool above = (row > 0 && TestForSouthConnection((row-1),col));
+          bool above = (row > 0
+           && (itsGrid[row - 1, col] == CellType.NorthSouth
+           || itsGrid[row - 1, col] == CellType.EastSouthWest
+           || itsGrid[row - 1, col] == CellType.NorthEastSouth
+           || itsGrid[row - 1, col] == CellType.SouthWestNorth
+           || itsGrid[row - 1, col] == CellType.EastSouth
+           || itsGrid[row - 1, col] == CellType.SouthWest
+           || itsGrid[row - 1, col] == CellType.NorthEastSouthWest
+           || itsGrid[row - 1, col] == CellType.SouthNode));
 
           // test for input from below - connections that point north
-          bool below = (row < (itsSideLength - 1) && TestForNorthConnection((row+1),col));
+          bool below = (row < (itsSideLength - 1)
+           && (itsGrid[row + 1, col] == CellType.NorthSouth
+           || itsGrid[row + 1, col] == CellType.WestNorthEast
+           || itsGrid[row + 1, col] == CellType.NorthEastSouth
+           || itsGrid[row + 1, col] == CellType.SouthWestNorth
+           || itsGrid[row + 1, col] == CellType.NorthEast
+           || itsGrid[row + 1, col] == CellType.WestNorth
+           || itsGrid[row + 1, col] == CellType.NorthEastSouthWest
+           || itsGrid[row + 1, col] == CellType.NorthNode));
 
           // test for input from left - connections that point east
-          bool left = (col > 0 && TestForEastConnection(row,(col-1)));
+          bool left = (col > 0
+           && (itsGrid[row, col - 1] == CellType.WestEast
+           || itsGrid[row, col - 1] == CellType.WestNorthEast
+           || itsGrid[row, col - 1] == CellType.EastSouthWest
+           || itsGrid[row, col - 1] == CellType.NorthEastSouth
+           || itsGrid[row, col - 1] == CellType.NorthEast
+           || itsGrid[row, col - 1] == CellType.EastSouth
+           || itsGrid[row, col - 1] == CellType.NorthEastSouthWest
+           || itsGrid[row, col - 1] == CellType.EastNode));
 
           // test for input from right - connections that point west
-          bool right = (col < (itsSideLength - 1) && TestForWestConnection(row,(col+1)));
+          bool right = (col < (itsSideLength - 1)
+           && (itsGrid[row, col + 1] == CellType.WestEast
+           || itsGrid[row, col + 1] == CellType.WestNorthEast
+           || itsGrid[row, col + 1] == CellType.EastSouthWest
+           || itsGrid[row, col + 1] == CellType.SouthWestNorth
+           || itsGrid[row, col + 1] == CellType.SouthWest
+           || itsGrid[row, col + 1] == CellType.WestNorth
+           || itsGrid[row, col + 1] == CellType.NorthEastSouthWest
+           || itsGrid[row, col + 1] == CellType.WestNode));
 
           if(!above && !below && !left && !right)
           {
@@ -1426,7 +1233,8 @@ namespace ArtificialLife
           {
             itsGrid[row, col] = 0;
           }
-          
+
+
           /// "┴"                           
           if(itsGrid[row, col] == CellType.WestNorthEast && !left && !above && !right)
           {
@@ -1541,18 +1349,6 @@ namespace ArtificialLife
 
           // horizontal pair
           if(itsGrid[row, col] == CellType.WestNode && (col > 0 && itsGrid[row, col - 1] == CellType.EastNode))
-          {
-            itsGrid[row, col] = 0;
-          }
-
-          // vertical pair
-          if(itsGrid[row, col] == CellType.NorthDelay && (row > 0 && itsGrid[row - 1, col] == CellType.SouthDelay))
-          {
-            itsGrid[row, col] = 0;
-          }
-
-          // horizontal pair
-          if(itsGrid[row, col] == CellType.WestDelay && (col > 0 && itsGrid[row, col - 1] == CellType.EastDelay))
           {
             itsGrid[row, col] = 0;
           }
