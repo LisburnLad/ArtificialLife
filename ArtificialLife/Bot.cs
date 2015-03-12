@@ -169,102 +169,105 @@ namespace ArtificialLife
 
       try
       {
-      itsGrid = new CellType[itsSideLength, itsSideLength];
+        itsGrid = new CellType[itsSideLength, itsSideLength];
 
-      if(itsBotType == 2)
-      {
-        // rules based encoding
+        if(itsBotType == 2)
+        {
+          // rules based encoding
 
-        // get the starting cell type
-        // - a node or a delay
-        int position = 0;
-        int direction = GetGeneValue( ref position, 2 );
-        int type = GetGeneValue( ref position, 1 );
+          // get the starting cell type
+          // - a node or a delay
+          int position = 0;
+          int direction = GetGeneValue( ref position, 2 );
+          int type = GetGeneValue( ref position, 1 );
 
-        // put this node into the center cell
-        CellType startType = (type == 0 ? CellType.NorthNode : CellType.NorthDelay) + direction;
+          // put this node into the center cell
+          CellType startType = (type == 0 ? CellType.NorthNode : CellType.NorthDelay) + direction;
         
-        // get the rules defined by the chromosome
-        int[,] rules = new int[3, 3];
-        for(int rule = 0; rule < 3; rule++)
-        {
-          int leftType = GetGeneValue( ref position, 2 );
-          int centerType = GetGeneValue( ref position, 2 );
-          int rightType = GetGeneValue( ref position, 2 );
-
-          rules[rule, 0] = leftType;
-          rules[rule, 1] = centerType;
-          rules[rule, 2] = rightType;
-        }
-
-        // show the rules
-        for(int rule = 0; rule < 3; rule++)
-        {
-          switch(rule)
+          // get the rules defined by the chromosome
+          int[,] rules = new int[3, 3];
+          for(int rule = 0; rule < 3; rule++)
           {
-            case 0: Console.Write( "A -> " ); break;
-            case 1: Console.Write( "B -> " ); break;
-            case 2: Console.Write( "C -> " ); break;
+            int leftType = GetGeneValue( ref position, 2 );
+            int centerType = GetGeneValue( ref position, 2 );
+            int rightType = GetGeneValue( ref position, 2 );
+
+            rules[rule, 0] = leftType;
+            rules[rule, 1] = centerType;
+            rules[rule, 2] = rightType;
           }
 
-          for(int outDirection = 0; outDirection < 3; outDirection++)
+          // show the rules
+          if(aShowGrid)
           {
-            switch(outDirection)
+            for(int rule = 0; rule < 3; rule++)
             {
-              case 0: Console.Write( "L" ); break;
-              case 1: Console.Write( "F" ); break;
-              case 2: Console.Write( "R" ); break;
-            }
+              switch(rule)
+              {
+                case 0: Console.Write( "A -> " ); break;
+                case 1: Console.Write( "B -> " ); break;
+                case 2: Console.Write( "C -> " ); break;
+              }
 
-            switch(rules[rule, outDirection])
-            {
-              case 0: Console.Write( "-," ); break;
-              case 1: Console.Write( "A," ); break;
-              case 2: Console.Write( "B," ); break;
-              case 3: Console.Write( "C," ); break;
+              for(int outDirection = 0; outDirection < 3; outDirection++)
+              {
+                switch(outDirection)
+                {
+                  case 0: Console.Write( "L" ); break;
+                  case 1: Console.Write( "F" ); break;
+                  case 2: Console.Write( "R" ); break;
+                }
+
+                switch(rules[rule, outDirection])
+                {
+                  case 0: Console.Write( "-," ); break;
+                  case 1: Console.Write( "A," ); break;
+                  case 2: Console.Write( "B," ); break;
+                  case 3: Console.Write( "C," ); break;
+                }
+              }
+
+              Console.WriteLine();
             }
           }
 
-          Console.WriteLine();
+          int row = itsSideLength/2;
+          int col = itsSideLength / 2;
+          itsGrid[row, col] = startType;
+
+          ApplyRules( rules, row, col, (Direction.North + direction) );
+
+          //ShowGrid( "c:\\grid.bmp" );
+          //return;
         }
-
-        int row = itsSideLength/2;
-        int col = itsSideLength / 2;
-        itsGrid[row, col] = startType;
-
-        ApplyRules( rules, row, col, (Direction.North + direction) );
-
-        ShowGrid( "c:\\grid.bmp" );
-        return;
-      }
-      else
-      {
-        // one to one encoding
-        for(int row = 0; row < itsSideLength; row++)
+        else
         {
-          for(int col = 0; col < itsSideLength; col++)
+          // one to one encoding
+          for(int row = 0; row < itsSideLength; row++)
           {
-            CellType geneValue = CellType.EmptyCell;
-            for(int bit = 0; bit < itsGeneLength; bit++)
+            for(int col = 0; col < itsSideLength; col++)
             {
-              int position = (row * itsGeneLength * itsSideLength) + (col * itsGeneLength) + bit;
-              geneValue += Convert.ToInt32( itsChromosome.ToBinaryString( position, 1 ) ) * (1 << (itsGeneLength - (bit + 1)));
-            }
+              CellType geneValue = CellType.EmptyCell;
+              for(int bit = 0; bit < itsGeneLength; bit++)
+              {
+                int position = (row * itsGeneLength * itsSideLength) + (col * itsGeneLength) + bit;
+                geneValue += Convert.ToInt32( itsChromosome.ToBinaryString( position, 1 ) ) * (1 << (itsGeneLength - (bit + 1)));
+              }
 
-            itsGrid[row, col] = geneValue;
+              itsGrid[row, col] = geneValue;
+            }
           }
         }
-      }
       
 
-      // remove cells with no connections
-      PruneGrid(aShowGrid);
+        // remove cells with no connections
+        PruneGrid(aShowGrid);
 
-      if(aShowGrid)
-      {
-        ShowGrid("c:\\grid.bmp");
-      }
-    } 
+        if(aShowGrid)
+        {
+          ShowGrid("c:\\grid.bmp");
+        }
+      } 
 
       catch
       {
@@ -283,192 +286,612 @@ namespace ArtificialLife
     /// <param name="col"></param>
     private void ApplyRules( int[,] aRules, int aRow, int aCol, Direction aDirection )
     {
-      // test if the source cell contains a node
+      // test what type of element is contained in the source cell
       if(itsGrid[aRow, aCol] >= CellType.NorthNode && itsGrid[aRow, aCol] <= CellType.WestNode)
       {
-        int ruleNumber = 0;
-
-        int leftRule = aRules[ruleNumber, 0];
-        int centerRule = aRules[ruleNumber, 1];
-        int rightRule = aRules[ruleNumber, 2];
-
-        int ruleCount = ((leftRule > 0) ? 1 : 0) + ((centerRule > 0) ? 1 : 0) + ((rightRule > 0) ? 1 : 0);
-
-        CellType[] cell = new CellType[3];        
-        switch(leftRule)
-        {
-          case 1: cell[0] = CellType.NorthNode; break;
-          case 2: cell[0] = CellType.NorthDelay; break;
-          case 3: cell[0] = CellType.NorthSouth; break;
-          default: cell[0] = CellType.EmptyCell; break;
-        }
-
-        switch(centerRule)
-        {
-          case 1: cell[1] = CellType.NorthNode; break;
-          case 2: cell[1] = CellType.NorthDelay; break;
-          case 3: cell[1] = CellType.NorthSouth; break;
-          default: cell[1] = CellType.EmptyCell; break;
-        }
-
-        switch(rightRule)
-        {
-          case 1: cell[2] = CellType.NorthNode; break;
-          case 2: cell[2] = CellType.NorthDelay; break;
-          case 3: cell[2] = CellType.NorthSouth; break;
-          default: cell[2] = CellType.EmptyCell; break;
-        }
-
-        int centerCellRow = 0;
-        int centerCellCol = 0;
-        int leftCellRow = 0;
-        int leftCellCol = 0;
-        int rightCellRow = 0;
-        int rightCellCol = 0;
-        int forwardCellRow = 0;
-        int forwardCellCol = 0;
-        switch(aDirection)
-        {
-          case Direction.North:
-            centerCellRow = aRow - 1;
-            centerCellCol = aCol;
-            leftCellRow = centerCellRow;
-            leftCellCol = centerCellCol - 1;
-            rightCellRow = centerCellRow;
-            rightCellCol = centerCellCol + 1;
-            forwardCellRow = centerCellRow - 1;
-            forwardCellCol = centerCellCol;
-            break;
-          case Direction.East:
-            centerCellRow = aRow;
-            centerCellCol = aCol+1;
-            leftCellRow = centerCellRow - 1;
-            leftCellCol = centerCellCol;
-            rightCellRow = centerCellRow + 1;
-            rightCellCol = centerCellCol;
-            forwardCellRow = centerCellRow;
-            forwardCellCol = centerCellCol+1;
-            break;
-          case Direction.South:
-            centerCellRow = aRow + 1;
-            centerCellCol = aCol;
-            leftCellRow = centerCellRow;
-            leftCellCol = centerCellCol + 1;
-            rightCellRow = centerCellRow;
-            rightCellCol = centerCellCol - 1;
-            forwardCellRow = centerCellRow + 1;
-            forwardCellCol = centerCellCol;
-            break;
-          case Direction.West:
-            centerCellRow = aRow;
-            centerCellCol = aCol-1;
-            leftCellRow = centerCellRow + 1;
-            leftCellCol = centerCellCol;
-            rightCellRow = centerCellRow - 1;
-            rightCellCol = centerCellCol;
-            forwardCellRow = centerCellRow;
-            forwardCellCol = centerCellCol-1;
-            break;
-        }
-
-        // if only a single rule is defined, then only the single output cell will be set
-        if(ruleCount == 1)
-        {
-          CellType centerCellType = CellType.EmptyCell;
-          if(cell[0] > 0)
-          {
-            centerCellType = cell[0];
-          }
-          else if(cell[1] > 0)
-          {
-            centerCellType = cell[1];
-          }
-          else if(cell[2] > 0)
-          {
-            centerCellType = cell[2];
-          }
-
-          // only a single cell is to be set
-          SetCenterCell( centerCellRow, centerCellCol, centerCellType, aDirection );
-        }
-        else
-        {
-          SetLeftCell( leftCellRow, leftCellCol, cell[0], aDirection );
-          //SetLeftCell( leftCellRow, leftCellCol, cell[0], aDirection );
-          SetRightCell( leftCellRow, leftCellCol, cell[2], aDirection );
-
-        }
+        // the source cell contains a node
+        CreateCellsFromRule(aRules, aRow, aCol, aDirection, 0);
       }
       else if(itsGrid[aRow, aCol] >= CellType.NorthDelay && itsGrid[aRow, aCol] <= CellType.WestDelay)
       {
         // the source cell contains a delay
+        CreateCellsFromRule(aRules, aRow, aCol, aDirection, 1);
       }
       else
       {
         // the source cell must contain a connection
+        CreateCellsFromRule(aRules, aRow, aCol, aDirection, 2);
       }
     }
 
-    private bool SetLeftCell( int aRow, int aCol, CellType aCellType, Direction aDirection )
+    private void CreateCellsFromRule(int[,] aRules, int aRow, int aCol, Direction aDirection, int ruleNumber)
     {
-      return SetCell( aRow, aCol, aCellType, aDirection, Movement.Left );
+      int leftRule = aRules[ruleNumber, 0];
+      int centerRule = aRules[ruleNumber, 1];
+      int rightRule = aRules[ruleNumber, 2];
+
+      int ruleCount = ((leftRule > 0) ? 1 : 0) + ((centerRule > 0) ? 1 : 0) + ((rightRule > 0) ? 1 : 0);
+
+      CellType[] cell = new CellType[3];
+      switch (leftRule)
+      {
+        case 1: cell[0] = CellType.NorthNode; break;
+        case 2: cell[0] = CellType.NorthDelay; break;
+        case 3: cell[0] = CellType.NorthSouth; break;
+        default: cell[0] = CellType.EmptyCell; break;
+      }
+
+      switch (centerRule)
+      {
+        case 1: cell[1] = CellType.NorthNode; break;
+        case 2: cell[1] = CellType.NorthDelay; break;
+        case 3: cell[1] = CellType.NorthSouth; break;
+        default: cell[1] = CellType.EmptyCell; break;
+      }
+
+      switch (rightRule)
+      {
+        case 1: cell[2] = CellType.NorthNode; break;
+        case 2: cell[2] = CellType.NorthDelay; break;
+        case 3: cell[2] = CellType.NorthSouth; break;
+        default: cell[2] = CellType.EmptyCell; break;
+      }
+
+      int centerCellRow = 0;
+      int centerCellCol = 0;
+      int leftCellRow = 0;
+      int leftCellCol = 0;
+      int rightCellRow = 0;
+      int rightCellCol = 0;
+      int forwardCellRow = 0;
+      int forwardCellCol = 0;
+      switch (aDirection)
+      {
+        case Direction.North:
+          centerCellRow = aRow - 1;
+          centerCellCol = aCol;
+          leftCellRow = centerCellRow;
+          leftCellCol = centerCellCol - 1;
+          rightCellRow = centerCellRow;
+          rightCellCol = centerCellCol + 1;
+          forwardCellRow = centerCellRow - 1;
+          forwardCellCol = centerCellCol;
+          break;
+        case Direction.East:
+          centerCellRow = aRow;
+          centerCellCol = aCol + 1;
+          leftCellRow = centerCellRow - 1;
+          leftCellCol = centerCellCol;
+          rightCellRow = centerCellRow + 1;
+          rightCellCol = centerCellCol;
+          forwardCellRow = centerCellRow;
+          forwardCellCol = centerCellCol + 1;
+          break;
+        case Direction.South:
+          centerCellRow = aRow + 1;
+          centerCellCol = aCol;
+          leftCellRow = centerCellRow;
+          leftCellCol = centerCellCol + 1;
+          rightCellRow = centerCellRow;
+          rightCellCol = centerCellCol - 1;
+          forwardCellRow = centerCellRow + 1;
+          forwardCellCol = centerCellCol;
+          break;
+        case Direction.West:
+          centerCellRow = aRow;
+          centerCellCol = aCol - 1;
+          leftCellRow = centerCellRow + 1;
+          leftCellCol = centerCellCol;
+          rightCellRow = centerCellRow - 1;
+          rightCellCol = centerCellCol;
+          forwardCellRow = centerCellRow;
+          forwardCellCol = centerCellCol - 1;
+          break;
+      }
+
+      Direction newDirection = aDirection;
+
+      // if only a single rule is defined, then only the single output cell will be set
+      if (ruleCount == 1)
+      {
+        Direction direction = aDirection;
+        CellType centerCellType = CellType.EmptyCell;
+        if (cell[0] > 0)
+        {
+          if (cell[0] == CellType.NorthSouth)
+          {
+            // the cell output only contains a connection          
+            if (SetConnectionCell(aRules, centerCellRow, centerCellCol, cell, aDirection, ref newDirection))
+            {
+              // if the cell has been added then apply the rule to this
+              ApplyRules(aRules, centerCellRow, centerCellCol, newDirection);
+            }
+            return;
+          }
+          else
+          {
+            // left cell is defined
+            // - change direction to left
+            centerCellType = cell[0];
+
+            if (direction == Direction.North)
+            {
+              direction = Direction.West;
+            }
+            else
+            {
+              direction = direction - 1;
+            }
+          }
+        }
+        else if (cell[1] > 0)
+        {
+          if (cell[1] == CellType.NorthSouth)
+          {
+            // the cell output only contains a connection          
+            if (SetConnectionCell(aRules, centerCellRow, centerCellCol, cell, aDirection, ref newDirection))
+            {
+              // if the cell has been added then apply the rule to this
+              ApplyRules(aRules, centerCellRow, centerCellCol, newDirection);
+            }
+            return;
+          }
+          else
+          {
+            centerCellType = cell[1];
+          }
+        }
+        else if (cell[2] > 0)
+        {
+          if (cell[2] == CellType.NorthSouth)
+          {
+            // the cell output only contains a connection          
+            if (SetConnectionCell(aRules, centerCellRow, centerCellCol, cell, aDirection, ref newDirection))
+            {
+              // if the cell has been added then apply the rule to this
+              ApplyRules(aRules, centerCellRow, centerCellCol, newDirection);
+            }
+            return;
+          }
+          else
+          {
+            centerCellType = cell[2];
+
+            if (direction == Direction.West)
+            {
+              direction = Direction.North;
+            }
+            else
+            {
+              direction = direction + 1;
+            }
+          }
+        }
+
+        // only a single cell is to be set        
+        if (SetCenterCell(centerCellRow, centerCellCol, centerCellType, direction, ref newDirection))
+        {
+          // if the cell has been added then apply the rule to this
+          ApplyRules(aRules, centerCellRow, centerCellCol, newDirection);
+        }
+      }
+      else
+      {
+        // add connections to the cells that are about to be added
+        SetConnectionCell(aRules, centerCellRow, centerCellCol, cell, aDirection, ref newDirection);
+
+        // dont set connections into left, right or forward cells
+        if (cell[0] == CellType.NorthNode || cell[0] == CellType.NorthDelay)
+        {
+          if( SetLeftCell(leftCellRow, leftCellCol, cell[0], aDirection, ref newDirection) )
+          {
+            // if the cell has been added then apply the rule to this
+            ApplyRules(aRules, leftCellRow, leftCellCol, newDirection);
+          }
+        }
+
+        // dont set connections into left, right or forward cells
+        if (cell[1] == CellType.NorthNode || cell[1] == CellType.NorthDelay)
+        {
+          if(SetCenterCell(forwardCellRow, forwardCellCol, cell[1], aDirection, ref newDirection))
+          {
+            // if the cell has been added then apply the rule to this
+            ApplyRules(aRules, centerCellRow, centerCellCol, newDirection);
+          }
+        }
+
+        // dont set connections into left, right or forward cells
+        if (cell[2] == CellType.NorthNode || cell[2] == CellType.NorthDelay)
+        {
+          if(SetRightCell(rightCellRow, rightCellCol, cell[2], aDirection, ref newDirection))
+          {
+            // if the cell has been added then apply the rule to this
+            ApplyRules(aRules, rightCellRow, rightCellCol, newDirection);
+          }
+        }        
+      }
     }
 
-    private bool SetRightCell( int aRow, int aCol, CellType aCellType, Direction aDirection )
+    private bool SetConnectionCell(int[,] aRules, int aRow, int aCol, CellType[] cell, Direction aDirection, ref Direction aNewDirection)
     {
-      return SetCell( aRow, aCol, aCellType, aDirection, Movement.Right );
+      // test if all the output cells are occupied
+      if (cell[0] != CellType.EmptyCell && cell[1] != CellType.EmptyCell && cell[2] != CellType.EmptyCell)
+      {
+        return SetGridCell(aRow, aCol, CellType.NorthEastSouthWest);
+      }
+      else
+      {
+        Direction[] direction = new Direction[4];
+
+
+        // array of connections that need to be expanded
+        Direction[] conectionDirection = new Direction[3];
+        bool[] connectionSet = new bool[3];
+
+
+        int directionCount = 0;
+
+        // always require a connection into the source cell
+        // - this is in the opposite direction to the output of the source
+        switch(aDirection)
+        {
+          case Direction.North: direction[directionCount] = Direction.South; break;
+          case Direction.East: direction[directionCount] = Direction.West; break;
+          case Direction.South: direction[directionCount] = Direction.North; break;
+          case Direction.West: direction[directionCount] = Direction.East; break;
+        }
+        directionCount++;
+
+        Movement movement = Movement.Left;
+        if( cell[(int)movement] != CellType.EmptyCell )
+        {
+          // add a connection to the left cell
+          switch (aDirection)
+          {
+            case Direction.North: direction[directionCount] = Direction.West; break;
+            case Direction.East: direction[directionCount] = Direction.North; break;
+            case Direction.South: direction[directionCount] = Direction.East; break;
+            case Direction.West: direction[directionCount] = Direction.South; break;
+          }
+
+          if( cell[(int)movement] == CellType.NorthSouth )
+          {
+            connectionSet[(int)Movement.Left] = true;
+            conectionDirection[(int)Movement.Left] = direction[directionCount];
+          }
+
+          directionCount++;
+        }
+
+        movement = Movement.Forward;
+        if (cell[(int)movement] != CellType.EmptyCell)
+        {
+          // add a connection to the forward cell
+          direction[directionCount] = aDirection;
+
+          if (cell[(int)movement] == CellType.NorthSouth)
+          {
+            connectionSet[(int)Movement.Forward] = true;
+            conectionDirection[(int)Movement.Forward] = direction[directionCount];
+          }
+
+          directionCount++;
+        }
+
+        movement = Movement.Right;
+        if (cell[(int)movement] != CellType.EmptyCell)
+        {
+          // add a connection to the right cell
+          switch (aDirection)
+          {
+            case Direction.North: direction[directionCount] = Direction.East; break;
+            case Direction.East: direction[directionCount] = Direction.South; break;
+            case Direction.South: direction[directionCount] = Direction.West; break;
+            case Direction.West: direction[directionCount] = Direction.North; break;
+          }
+
+          if (cell[(int)movement] == CellType.NorthSouth)
+          {
+            connectionSet[(int)Movement.Right] = true;
+            conectionDirection[(int)Movement.Right] = direction[directionCount];
+          }
+
+          directionCount++;
+        }
+
+        // now have all the directions that need to be included in the connector cell
+        // - this should always be 2 or greater, otherwise the cell has no outputs
+        if( directionCount >= 2 )
+        {
+          CellType connectionType = CellType.EmptyCell;
+          switch( direction[0] )
+          {
+            case Direction.North:
+              switch (direction[1])
+              {                
+                case Direction.East:
+                  if (directionCount == 3)
+                  {
+                    switch( direction[2] )
+                    {
+                      case Direction.South: connectionType = CellType.NorthEastSouth; break;
+                      case Direction.West: connectionType = CellType.WestNorthEast; break;
+                    }
+                  }
+                  else
+                  {
+                    connectionType = CellType.NorthEast;
+                  }
+                  break;
+                case Direction.South:
+                  if (directionCount == 3)
+                  {
+                    switch( direction[2] )
+                    {
+                      case Direction.East: connectionType = CellType.NorthEastSouth; break;
+                      case Direction.West: connectionType = CellType.SouthWestNorth; break;
+                    }
+                  }
+                  else
+                  {
+                    connectionType = CellType.NorthSouth;
+                  }
+                  break;
+                case Direction.West:
+                  if (directionCount == 3)
+                  {
+                    switch( direction[2] )
+                    {
+                      case Direction.East: connectionType = CellType.WestNorthEast; break;
+                      case Direction.South: connectionType = CellType.SouthWestNorth; break;
+                    }
+                  }
+                  else
+                  {
+                    connectionType = CellType.WestNorth;
+                  }
+                  break;
+              }
+              break;
+
+            case Direction.East:
+              switch (direction[1])
+              {
+                case Direction.North:
+                  if (directionCount == 3)
+                  {
+                    switch( direction[2] )
+                    {
+                      case Direction.South: connectionType = CellType.NorthEastSouth; break;
+                      case Direction.West: connectionType = CellType.WestNorthEast; break;
+                    }
+                  }
+                  else
+                  {
+                    connectionType = CellType.NorthEast;
+                  }
+                  break;                
+                case Direction.South:
+                  if (directionCount == 3)
+                  {
+                    switch( direction[2] )
+                    {
+                      case Direction.North: connectionType = CellType.NorthEastSouth; break;
+                      case Direction.West: connectionType = CellType.EastSouthWest; break;
+                    }
+                  }
+                  else
+                  {
+                    connectionType = CellType.EastSouth;
+                  }
+                  break;
+                case Direction.West:
+                  if (directionCount == 3)
+                  {
+                    switch( direction[2] )
+                    {
+                      case Direction.North: connectionType = CellType.WestNorthEast; break;
+                      case Direction.South: connectionType = CellType.EastSouthWest; break;
+                    }
+                  }
+                  else
+                  {
+                    connectionType = CellType.WestEast;
+                  }
+                  break;
+              }
+              break;
+
+            case Direction.South:
+              switch (direction[1])
+              {
+                case Direction.North:
+                  if (directionCount == 3)
+                  {
+                    switch( direction[2] )
+                    {
+                      case Direction.East: connectionType = CellType.NorthEastSouth; break;
+                      case Direction.West: connectionType = CellType.SouthWestNorth; break;
+                    }
+                  }
+                  else
+                  {
+                    connectionType = CellType.NorthSouth;
+                  }
+                  break;
+                case Direction.East:
+                  if (directionCount == 3)
+                  {
+                    switch( direction[2] )
+                    {
+                      case Direction.North: connectionType = CellType.NorthEastSouth; break;
+                      case Direction.West: connectionType = CellType.EastSouthWest; break;
+                    }
+                  }
+                  else
+                  {
+                    connectionType = CellType.EastSouth;
+                  }
+                  break;                
+                case Direction.West:
+                  if (directionCount == 3)
+                  {
+                    switch( direction[2] )
+                    {
+                      case Direction.North: connectionType = CellType.SouthWestNorth; break;
+                      case Direction.East: connectionType = CellType.EastSouthWest; break;
+                    }
+                  }
+                  else
+                  {
+                    connectionType = CellType.SouthWest;
+                  }
+                  break;
+              }
+              break;
+
+            case Direction.West:
+              switch (direction[1])
+              {
+                case Direction.North:
+                  if (directionCount == 3)
+                  {
+                    switch( direction[2] )
+                    {
+                      case Direction.East: connectionType = CellType.WestNorthEast; break;
+                      case Direction.South: connectionType = CellType.SouthWestNorth; break;
+                    }
+                  }
+                  else
+                  {
+                    connectionType = CellType.WestNorth;
+                  }
+                  break;
+                case Direction.East:
+                  if (directionCount == 3)
+                  {
+                    switch( direction[2] )
+                    {
+                      case Direction.North: connectionType = CellType.WestNorthEast; break;
+                      case Direction.South: connectionType = CellType.EastSouthWest; break;
+                    }
+                  }
+                  else
+                  {
+                    connectionType = CellType.WestEast;
+                  }
+                  break;
+                case Direction.South:
+                  if (directionCount == 3)
+                  {
+                    switch( direction[2] )
+                    {
+                      case Direction.North: connectionType = CellType.SouthWestNorth; break;
+                      case Direction.East: connectionType = CellType.EastSouthWest; break;
+                    }
+                  }
+                  else
+                  {
+                    connectionType = CellType.SouthWest;
+                  }
+                  break;                
+              }
+              break;
+          }
+
+          // set the new direction to which the connection is pointing
+          aNewDirection = direction[1];
+
+          if (SetGridCell(aRow, aCol, connectionType))
+          {
+            for (int connections = 0; connections < 3; connections++)
+            {
+              if (connectionSet[connections])
+              {
+                ApplyRules(aRules, aRow, aCol, conectionDirection[connections]);
+              }
+            }
+
+            return true;
+          }
+        }
+      }
+
+      return false;
     }
 
-    private bool SetCenterCell( int aRow, int aCol, CellType centerCellType, Direction aDirection )
+    private bool SetLeftCell(int aRow, int aCol, CellType aCellType, Direction aDirection, ref Direction aNewDirection)
     {
-      return SetCell( aRow, aCol, centerCellType, aDirection, Movement.Forward );
+      return SetCell(aRow, aCol, aCellType, aDirection, Movement.Left, ref aNewDirection);
     }
 
-    private bool SetCell( int aRow, int aCol, CellType centerCellType, Direction aDirection, Movement aMovement )
+    private bool SetRightCell(int aRow, int aCol, CellType aCellType, Direction aDirection, ref Direction aNewDirection)
     {
-      if((aRow >= 0 && aRow < itsSideLength)
+      return SetCell(aRow, aCol, aCellType, aDirection, Movement.Right, ref aNewDirection);
+    }
+
+    private bool SetCenterCell(int aRow, int aCol, CellType aCellType, Direction aDirection, ref Direction aNewDirection)
+    {
+      return SetCell(aRow, aCol, aCellType, aDirection, Movement.Forward, ref aNewDirection);
+    }
+
+    private bool SetCell(int aRow, int aCol, CellType centerCellType, Direction aDirection, Movement aMovement, ref Direction aNewDirection)
+    {
+      Direction direction = aDirection;
+      if (aMovement == Movement.Left)
+      {
+        if (direction == Direction.North)
+        {
+          direction = Direction.West;
+        }
+        else
+        {
+          direction = direction - 1;
+        }
+      } else if (aMovement == Movement.Right)
+      {
+        if (direction == Direction.West)
+        {
+          direction = Direction.North;
+        }
+        else
+        {
+          direction = direction + 1;
+        }        
+      }
+
+      // set the direction in which the new cell type is pointing
+      aNewDirection = direction;
+
+      CellType cellType = centerCellType + (int)direction;
+      //if (centerCellType == CellType.NorthSouth)
+      //{
+      //  if (aDirection == Direction.North || aDirection == Direction.South)
+      //  {
+      //    cellType = CellType.NorthSouth;
+      //  }
+      //  else
+      //  {
+      //    cellType = CellType.WestEast;
+      //  }
+      //}
+
+      return SetGridCell(aRow, aCol, cellType);
+    }
+
+    /// <summary>
+    /// check that the specified location is on the grid and that the target cell is unoccupied
+    /// </summary>
+    /// <param name="aRow"></param>
+    /// <param name="aCol"></param>
+    /// <param name="cellType"></param>
+    /// <returns></returns>
+    private bool SetGridCell(int aRow, int aCol, CellType cellType)
+    {
+      if ((aRow >= 0 && aRow < itsSideLength)
       && (aCol >= 0 && aCol < itsSideLength)
       && itsGrid[aRow, aCol] == CellType.EmptyCell)
       {
-        Direction direction = aDirection;
-        if(aMovement == Movement.Left)
-        {
-          if(direction == Direction.North)
-          {
-            direction = Direction.West;
-          }
-          else
-          {
-            direction = direction - 1;
-          }
-        }
-
-        if(aMovement == Movement.Right)
-        {
-          if(direction == Direction.West)
-          {
-            direction = Direction.North;
-          }
-          else
-          {
-            direction = direction + 1;
-          }
-        }
-
-
-        CellType cellType = centerCellType + (int)aDirection;
-        if(centerCellType == CellType.NorthSouth)
-        {
-          if(aDirection == Direction.North || aDirection == Direction.South)
-          {
-            cellType = CellType.NorthSouth;
-          }
-          else
-          {
-            cellType = CellType.WestEast;
-          }
-        }
-
         itsGrid[aRow, aCol] = cellType;
 
         return true;
@@ -488,7 +911,7 @@ namespace ArtificialLife
       int bitValue = 0;
       for(int bit = 0; bit < geneLength; bit++)
       {        
-        bitValue += Convert.ToInt32( itsChromosome.ToBinaryString( position, 1 ) ) * (1 << (geneLength - (bit + 1)));
+        bitValue += Convert.ToInt32( itsChromosome.ToBinaryString( position + bit, 1 ) ) * (1 << (geneLength - (bit + 1)));
       }
 
       // increase the position by the number of bits read
@@ -570,8 +993,6 @@ namespace ArtificialLife
         for(int col = 0; col < itsSideLength; col++)
         {
           // retain delay node output
-          //if(itsOutput[row, col] == '>' || itsOutput[row, col] == '<')
-
           if(itsGrid[row, col] >= CellType.NorthDelay && itsGrid[row, col] <= CellType.WestDelay)          
           {
             newOutput[row, col] = itsOutput[row, col];

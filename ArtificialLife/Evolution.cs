@@ -74,18 +74,18 @@ namespace ArtificialLife
       //get the best solution 
       var chromosome = e.Population.GetTop( 1 )[0];
 
-      if (itsShowOnTerminate)
+      if(itsShowOnTerminate)
       {
-      //decode chromosome
+        //decode chromosome
         double fitness = CreateAndEvaluateBot( chromosome, itsSideLength, itsBotType, true );
 
-      Console.WriteLine( "Final Chromosome Fitmess: " + fitness );
-      Console.WriteLine( "Evaluations: " + e.Evaluations );
-    }
+        Console.WriteLine( "Final Chromosome Fitmess: " + fitness );
+        Console.WriteLine( "Evaluations: " + e.Evaluations );
+      }
 
       itsFitness = chromosome.Fitness;
 
-      Console.WriteLine("Final Chromosome Fitmess: " + itsFitness);
+      Console.WriteLine( "Final Chromosome Fitmess: " + itsFitness );
     }
 
     /// <summary>
@@ -206,9 +206,17 @@ namespace ArtificialLife
       int sideLength = Bot.GetSideLengthFromChromosome(testChromosome);
 
       int sideLength2 = 6;
-      string testChromosome2 = "001011110000011100000";
+      string testChromosome2 = "001" +      // starting cell - North, Delay (B)
+                               "011110" +   // rule A - LA, FC, RB
+                               "000011" +   // rule B - L-, F-, RC
+                               "100000";    // rule C - LB, F-, R-
 
-      Chromosome chromosome = new Chromosome( testChromosome2 );
+      string testChromosome3 = "110" +      // starting cell - West, Nand (A)
+                               "010010" +   // rule A - LA, F-, RB
+                               "110011" +   // rule B - LC, F-, RC
+                               "100000";    // rule C - LB, F-, R-
+
+      Chromosome chromosome = new Chromosome( testChromosome3 );
       CreateAndEvaluateBot(  chromosome, sideLength2, 2, true );
     }
 
