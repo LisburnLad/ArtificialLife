@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using GAF;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 
 namespace ArtificialLife
 {
@@ -19,6 +20,11 @@ namespace ArtificialLife
     public int itsSideLength { get; set; }
 
     /// <summary>
+    /// the type of chromosome used to create the bot
+    /// </summary>
+    public int itsBotType { get; set; }
+
+    /// <summary>
     /// the chromosome representing this bot
     /// </summary>
     Chromosome itsChromosome;
@@ -30,6 +36,20 @@ namespace ArtificialLife
     /// </summary>
     char[,] itsOutput;
 
+    enum Direction
+    {
+      North,
+      East,
+      South,
+      West
+    };
+
+    enum Movement
+    {
+      Left,
+      Forward,
+      Right
+    };
 
     enum CellType
     {
@@ -61,11 +81,25 @@ namespace ArtificialLife
       WestNode,           // "←" - 15
 
       // Delay Nodes
-      NorthDelay,         // "▲" - 16
+      NorthDelay,         // "▲" - 16 - 10000
       EastDelay,          // "►" - 17 - 10001
-      SouthDelay,         // "▼" - 18
-      WestDelay           // "◄" - 19
+      SouthDelay,         // "▼" - 18 - 10010
+      WestDelay          // "◄" - 19 - 10011
 
+      //NorthDelay2,        // "▲" - 20 - 10100
+      //EastDelay2,         // "►" - 21 - 10101
+      //SouthDelay2,        // "▼" - 22 - 10110
+      //WestDelay2,         // "◄" - 23 - 10111
+
+      //NorthDelay3,        // "▲" - 20 - 11000
+      //EastDelay3,         // "►" - 21 - 11001
+      //SouthDelay3,        // "▼" - 22 - 11010
+      //WestDelay3,         // "◄" - 23 - 11011
+
+      //NorthDelay4,        // "▲" - 20 - 11100
+      //EastDelay4,         // "►" - 21 - 11101
+      //SouthDelay4,        // "▼" - 22 - 11110
+      //WestDelay4          // "◄" - 23 - 11111
     };
 
     /// <summary>
@@ -78,8 +112,13 @@ namespace ArtificialLife
     /// </summary>
     /// <param name="aSideLength"></param>
     /// <returns></returns>
-    public static int GetChromosomeLength(int aSideLength)
+    public static int GetChromosomeLength(int aSideLength,int aBotType)
     {
+      if(aBotType == 2)
+      {
+        return 21;
+      }
+
       return ((aSideLength * aSideLength) * itsGeneLength);
     }
 
@@ -102,8 +141,9 @@ namespace ArtificialLife
     /// create the bot's grid from the supplied chromosome
     /// </summary>
     /// <param name="aChromosome"></param>
-    public Bot( Chromosome aChromosome, Test aTest, int aSideLength, bool aShowGrid )      
+    public Bot( Chromosome aChromosome, Test aTest, int aSideLength, int aBotType, bool aShowGrid )      
     {
+      itsBotType = aBotType;
       itsSideLength = aSideLength;
 
       // take a copy of the chromosome
@@ -131,20 +171,91 @@ namespace ArtificialLife
       {
       itsGrid = new CellType[itsSideLength, itsSideLength];
 
-      for(int row = 0; row < itsSideLength; row++)
+      if(itsBotType == 2)
       {
-        for(int col = 0; col < itsSideLength; col++)
+        // rules based encoding
+
+        // get the starting cell type
+        // - a node or a delay
+        int position = 0;
+        int direction = GetGeneValue( ref position, 2 );
+        int type = GetGeneValue( ref position, 1 );
+
+        // put this node into the center cell
+        CellType startType = (type == 0 ? CellType.NorthNode : CellType.NorthDelay) + direction;
+        
+        // get the rules defined by the chromosome
+        int[,] rules = new int[3, 3];
+        for(int rule = 0; rule < 3; rule++)
         {
-          CellType geneValue = CellType.EmptyCell;
-          for(int bit = 0; bit < itsGeneLength; bit++)
-          {            
-            int position = (row * itsGeneLength * itsSideLength) + (col * itsGeneLength) + bit;
-            geneValue += Convert.ToInt32( itsChromosome.ToBinaryString( position, 1 ) ) * (1 << (itsGeneLength - (bit + 1)));
+          int leftType = GetGeneValue( ref position, 2 );
+          int centerType = GetGeneValue( ref position, 2 );
+          int rightType = GetGeneValue( ref position, 2 );
+
+          rules[rule, 0] = leftType;
+          rules[rule, 1] = centerType;
+          rules[rule, 2] = rightType;
+        }
+
+        // show the rules
+        for(int rule = 0; rule < 3; rule++)
+        {
+          switch(rule)
+          {
+            case 0: Console.Write( "A -> " ); break;
+            case 1: Console.Write( "B -> " ); break;
+            case 2: Console.Write( "C -> " ); break;
           }
 
-          itsGrid[row, col] = geneValue;
+          for(int outDirection = 0; outDirection < 3; outDirection++)
+          {
+            switch(outDirection)
+            {
+              case 0: Console.Write( "L" ); break;
+              case 1: Console.Write( "F" ); break;
+              case 2: Console.Write( "R" ); break;
+            }
+
+            switch(rules[rule, outDirection])
+            {
+              case 0: Console.Write( "-," ); break;
+              case 1: Console.Write( "A," ); break;
+              case 2: Console.Write( "B," ); break;
+              case 3: Console.Write( "C," ); break;
+            }
+          }
+
+          Console.WriteLine();
+        }
+
+        int row = itsSideLength/2;
+        int col = itsSideLength / 2;
+        itsGrid[row, col] = startType;
+
+        ApplyRules( rules, row, col, (Direction.North + direction) );
+
+        ShowGrid( "c:\\grid.bmp" );
+        return;
+      }
+      else
+      {
+        // one to one encoding
+        for(int row = 0; row < itsSideLength; row++)
+        {
+          for(int col = 0; col < itsSideLength; col++)
+          {
+            CellType geneValue = CellType.EmptyCell;
+            for(int bit = 0; bit < itsGeneLength; bit++)
+            {
+              int position = (row * itsGeneLength * itsSideLength) + (col * itsGeneLength) + bit;
+              geneValue += Convert.ToInt32( itsChromosome.ToBinaryString( position, 1 ) ) * (1 << (itsGeneLength - (bit + 1)));
+            }
+
+            itsGrid[row, col] = geneValue;
+          }
         }
       }
+      
 
       // remove cells with no connections
       PruneGrid(aShowGrid);
@@ -160,8 +271,230 @@ namespace ArtificialLife
         Console.WriteLine("An error occurred during grid creation: ");
         Console.WriteLine("Chromosome: " + itsChromosome.ToBinaryString());
         Console.WriteLine("Side Length: " + itsSideLength);
-        Console.WriteLine("Chromosome Length: " + GetChromosomeLength(itsSideLength));
+        Console.WriteLine("Chromosome Length: " + GetChromosomeLength(itsSideLength,itsBotType));
       }
+    }
+
+    /// <summary>
+    /// apply the rules to create the output for the specified source cell
+    /// </summary>
+    /// <param name="rules"></param>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
+    private void ApplyRules( int[,] aRules, int aRow, int aCol, Direction aDirection )
+    {
+      // test if the source cell contains a node
+      if(itsGrid[aRow, aCol] >= CellType.NorthNode && itsGrid[aRow, aCol] <= CellType.WestNode)
+      {
+        int ruleNumber = 0;
+
+        int leftRule = aRules[ruleNumber, 0];
+        int centerRule = aRules[ruleNumber, 1];
+        int rightRule = aRules[ruleNumber, 2];
+
+        int ruleCount = ((leftRule > 0) ? 1 : 0) + ((centerRule > 0) ? 1 : 0) + ((rightRule > 0) ? 1 : 0);
+
+        CellType[] cell = new CellType[3];        
+        switch(leftRule)
+        {
+          case 1: cell[0] = CellType.NorthNode; break;
+          case 2: cell[0] = CellType.NorthDelay; break;
+          case 3: cell[0] = CellType.NorthSouth; break;
+          default: cell[0] = CellType.EmptyCell; break;
+        }
+
+        switch(centerRule)
+        {
+          case 1: cell[1] = CellType.NorthNode; break;
+          case 2: cell[1] = CellType.NorthDelay; break;
+          case 3: cell[1] = CellType.NorthSouth; break;
+          default: cell[1] = CellType.EmptyCell; break;
+        }
+
+        switch(rightRule)
+        {
+          case 1: cell[2] = CellType.NorthNode; break;
+          case 2: cell[2] = CellType.NorthDelay; break;
+          case 3: cell[2] = CellType.NorthSouth; break;
+          default: cell[2] = CellType.EmptyCell; break;
+        }
+
+        int centerCellRow = 0;
+        int centerCellCol = 0;
+        int leftCellRow = 0;
+        int leftCellCol = 0;
+        int rightCellRow = 0;
+        int rightCellCol = 0;
+        int forwardCellRow = 0;
+        int forwardCellCol = 0;
+        switch(aDirection)
+        {
+          case Direction.North:
+            centerCellRow = aRow - 1;
+            centerCellCol = aCol;
+            leftCellRow = centerCellRow;
+            leftCellCol = centerCellCol - 1;
+            rightCellRow = centerCellRow;
+            rightCellCol = centerCellCol + 1;
+            forwardCellRow = centerCellRow - 1;
+            forwardCellCol = centerCellCol;
+            break;
+          case Direction.East:
+            centerCellRow = aRow;
+            centerCellCol = aCol+1;
+            leftCellRow = centerCellRow - 1;
+            leftCellCol = centerCellCol;
+            rightCellRow = centerCellRow + 1;
+            rightCellCol = centerCellCol;
+            forwardCellRow = centerCellRow;
+            forwardCellCol = centerCellCol+1;
+            break;
+          case Direction.South:
+            centerCellRow = aRow + 1;
+            centerCellCol = aCol;
+            leftCellRow = centerCellRow;
+            leftCellCol = centerCellCol + 1;
+            rightCellRow = centerCellRow;
+            rightCellCol = centerCellCol - 1;
+            forwardCellRow = centerCellRow + 1;
+            forwardCellCol = centerCellCol;
+            break;
+          case Direction.West:
+            centerCellRow = aRow;
+            centerCellCol = aCol-1;
+            leftCellRow = centerCellRow + 1;
+            leftCellCol = centerCellCol;
+            rightCellRow = centerCellRow - 1;
+            rightCellCol = centerCellCol;
+            forwardCellRow = centerCellRow;
+            forwardCellCol = centerCellCol-1;
+            break;
+        }
+
+        // if only a single rule is defined, then only the single output cell will be set
+        if(ruleCount == 1)
+        {
+          CellType centerCellType = CellType.EmptyCell;
+          if(cell[0] > 0)
+          {
+            centerCellType = cell[0];
+          }
+          else if(cell[1] > 0)
+          {
+            centerCellType = cell[1];
+          }
+          else if(cell[2] > 0)
+          {
+            centerCellType = cell[2];
+          }
+
+          // only a single cell is to be set
+          SetCenterCell( centerCellRow, centerCellCol, centerCellType, aDirection );
+        }
+        else
+        {
+          SetLeftCell( leftCellRow, leftCellCol, cell[0], aDirection );
+          //SetLeftCell( leftCellRow, leftCellCol, cell[0], aDirection );
+          SetRightCell( leftCellRow, leftCellCol, cell[2], aDirection );
+
+        }
+      }
+      else if(itsGrid[aRow, aCol] >= CellType.NorthDelay && itsGrid[aRow, aCol] <= CellType.WestDelay)
+      {
+        // the source cell contains a delay
+      }
+      else
+      {
+        // the source cell must contain a connection
+      }
+    }
+
+    private bool SetLeftCell( int aRow, int aCol, CellType aCellType, Direction aDirection )
+    {
+      return SetCell( aRow, aCol, aCellType, aDirection, Movement.Left );
+    }
+
+    private bool SetRightCell( int aRow, int aCol, CellType aCellType, Direction aDirection )
+    {
+      return SetCell( aRow, aCol, aCellType, aDirection, Movement.Right );
+    }
+
+    private bool SetCenterCell( int aRow, int aCol, CellType centerCellType, Direction aDirection )
+    {
+      return SetCell( aRow, aCol, centerCellType, aDirection, Movement.Forward );
+    }
+
+    private bool SetCell( int aRow, int aCol, CellType centerCellType, Direction aDirection, Movement aMovement )
+    {
+      if((aRow >= 0 && aRow < itsSideLength)
+      && (aCol >= 0 && aCol < itsSideLength)
+      && itsGrid[aRow, aCol] == CellType.EmptyCell)
+      {
+        Direction direction = aDirection;
+        if(aMovement == Movement.Left)
+        {
+          if(direction == Direction.North)
+          {
+            direction = Direction.West;
+          }
+          else
+          {
+            direction = direction - 1;
+          }
+        }
+
+        if(aMovement == Movement.Right)
+        {
+          if(direction == Direction.West)
+          {
+            direction = Direction.North;
+          }
+          else
+          {
+            direction = direction + 1;
+          }
+        }
+
+
+        CellType cellType = centerCellType + (int)aDirection;
+        if(centerCellType == CellType.NorthSouth)
+        {
+          if(aDirection == Direction.North || aDirection == Direction.South)
+          {
+            cellType = CellType.NorthSouth;
+          }
+          else
+          {
+            cellType = CellType.WestEast;
+          }
+        }
+
+        itsGrid[aRow, aCol] = cellType;
+
+        return true;
+      }
+
+      return false;
+    }
+
+    /// <summary>
+    /// get the value of the gene at the specified position and the given length
+    /// </summary>
+    /// <param name="position"></param>
+    /// <param name="geneLength"></param>
+    /// <returns></returns>
+    private int GetGeneValue( ref int position, int geneLength )
+    {
+      int bitValue = 0;
+      for(int bit = 0; bit < geneLength; bit++)
+      {        
+        bitValue += Convert.ToInt32( itsChromosome.ToBinaryString( position, 1 ) ) * (1 << (geneLength - (bit + 1)));
+      }
+
+      // increase the position by the number of bits read
+      position += geneLength;
+
+      return bitValue;
     } 
 
     /// <summary>
@@ -237,7 +570,9 @@ namespace ArtificialLife
         for(int col = 0; col < itsSideLength; col++)
         {
           // retain delay node output
-          if(itsOutput[row, col] == '>' || itsOutput[row, col] == '>')
+          //if(itsOutput[row, col] == '>' || itsOutput[row, col] == '<')
+
+          if(itsGrid[row, col] >= CellType.NorthDelay && itsGrid[row, col] <= CellType.WestDelay)          
           {
             newOutput[row, col] = itsOutput[row, col];
           }
@@ -292,27 +627,24 @@ namespace ArtificialLife
             
             char output = '0';
 
-            // if the current node value is '>' then output will be 1
-            if(newOutput[row, col] == '>')
+            // test if state has changed to 1            
+            if (cellValue == true)
             {
-              // test if the output should be switched next time
-              if(cellValue == false)
-              {
-                newOutput[row, col] = '<';
-              }
-
-              output = '1';
+              // change the state
+              // input has gone from 0 to 1
+              newOutput[row, col] = '1';
             }
             else
             {
-              // test if the output should be switched next time
-              if(cellValue == true)
-              {
-                newOutput[row, col] = '>';
-              }
-
-              // if the current node value is '<' then output will be 0
-              output = '0';
+              // change the state 
+              // - input has gone from 1 to 0
+              newOutput[row, col] = '0';
+            }
+            
+            // set the output according to the current state
+            if(newOutput[row, col] == '1')
+            {
+              output = '1';
             }
 
             switch(itsGrid[row, col])
@@ -564,27 +896,27 @@ namespace ArtificialLife
           break;
 
         case CellType.NorthDelay:  // "▲"
-          cellValue |= ValueOfLeftCell( row, col );         
-          cellValue |= ValueOfRightCell( row, col );        
-          cellValue |= ValueOfCellBelow( row, col );        
+          cellValue |= ValueOfLeftCellDelay( row, col );         
+          cellValue |= ValueOfRightCellDelay( row, col );        
+          cellValue |= ValueOfCellBelowDelay( row, col );        
           break;
 
         case CellType.EastDelay:  // "►"    
-          cellValue |= ValueOfCellAbove( row, col );
-          cellValue |= ValueOfLeftCell( row, col );
-          cellValue |= ValueOfCellBelow( row, col );
+          cellValue |= ValueOfCellAboveDelay( row, col );
+          cellValue |= ValueOfLeftCellDelay( row, col );
+          cellValue |= ValueOfCellBelowDelay( row, col );
           break;
 
         case CellType.SouthDelay:  // "▼"
-          cellValue |= ValueOfLeftCell( row, col );
-          cellValue |= ValueOfRightCell( row, col );
-          cellValue |= ValueOfCellAbove( row, col );
+          cellValue |= ValueOfLeftCellDelay( row, col );
+          cellValue |= ValueOfRightCellDelay( row, col );
+          cellValue |= ValueOfCellAboveDelay( row, col );
           break;
 
         case CellType.WestDelay:  // "◄"
-          cellValue |= ValueOfCellAbove( row, col );
-          cellValue |= ValueOfRightCell( row, col );
-          cellValue |= ValueOfCellBelow( row, col );
+          cellValue |= ValueOfCellAboveDelay( row, col );
+          cellValue |= ValueOfRightCellDelay( row, col );
+          cellValue |= ValueOfCellBelowDelay( row, col );
           break;
       }
 
@@ -693,7 +1025,7 @@ namespace ArtificialLife
 
         if(TestForSouthConnection( row, col ))
         {
-          if(itsOutput[row, col] == '0')
+          if (itsOutput[row, col] == '0' || itsOutput[row, col] == '<')
           {
             return false;
           }
@@ -719,7 +1051,7 @@ namespace ArtificialLife
         // connections with a North output
         if(TestForNorthConnection( row, col ))
         {
-          if(itsOutput[row, col] == '0')
+          if (itsOutput[row, col] == '0' || itsOutput[row, col] == '<')
           {
             return false;
           }
@@ -745,7 +1077,7 @@ namespace ArtificialLife
         // connections with a West output
         if(TestForWestConnection( row, col ))
         {
-          if(itsOutput[row, col] == '0')
+          if (itsOutput[row, col] == '0' || itsOutput[row, col] == '<')
           {
             return false;
           }
@@ -776,7 +1108,7 @@ namespace ArtificialLife
         // connnections with an East output
         if(TestForEastConnection( row, col ))
         {
-          if(itsOutput[row, col] == '0')
+          if (itsOutput[row, col] == '0' || itsOutput[row, col] == '<')
           {
             return false;
           }
@@ -785,6 +1117,113 @@ namespace ArtificialLife
       return true;
     }
 
+    /// <summary>
+    /// if the cell above has an output of zero and has a connection into this cell then return false 
+    /// </summary>
+    /// <param name="aRow"></param>
+    /// <param name="aCol"></param>
+    /// <returns></returns>
+    private bool ValueOfCellAboveDelay(int aRow, int aCol)
+    {
+      // value of cell above - cells with South connection
+      if (aRow > 0)
+      {
+        int row = aRow - 1;
+        int col = aCol;
+
+        if (TestForSouthConnection(row, col))
+        {
+          if (itsOutput[row, col] == '1' || itsOutput[row, col] == '>')
+          {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    /// <summary>
+    /// if the cell below has an output of zero and has a connection into this cell then return false 
+    /// </summary>
+    /// <param name="aRow"></param>
+    /// <param name="aCol"></param>
+    /// <returns></returns>
+    private bool ValueOfCellBelowDelay(int aRow, int aCol)
+    {
+      // value of cell below
+      if (aRow < (itsSideLength - 1))
+      {
+        int row = aRow + 1;
+        int col = aCol;
+
+        // connections with a North output
+        if (TestForNorthConnection(row, col))
+        {
+          if (itsOutput[row, col] == '1' || itsOutput[row, col] == '>')
+          {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    /// <summary>
+    /// if the cell to the right has an output of zero and has a connection into this cell then return false 
+    /// </summary>
+    /// <param name="aRow"></param>
+    /// <param name="aCol"></param>
+    /// <returns></returns>
+    private bool ValueOfRightCellDelay(int aRow, int aCol)
+    {
+      // value of right cell
+      if (aCol < (itsSideLength - 1))
+      {
+        int row = aRow;
+        int col = aCol + 1;
+
+        // connections with a West output
+        if (TestForWestConnection(row, col))
+        {
+          if (itsOutput[row, col] == '1' || itsOutput[row, col] == '>')
+          {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+
+    /// <summary>
+    /// get the value of the left hand cell, if it contains a connection into the current cell
+    /// </summary>
+    /// <param name="output"></param>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
+    /// <returns>
+    /// the value of the left hand cell, if it contains a connection into the current cell, 
+    /// true otherwise
+    /// </returns>
+    private bool ValueOfLeftCellDelay(int aRow, int aCol)
+    {
+      // value of left cell
+      if (aCol > 0)
+      {
+        int row = aRow;
+        int col = aCol - 1;
+
+        // connnections with an East output
+        if (TestForEastConnection(row, col))
+        {
+          if (itsOutput[row, col] == '1' || itsOutput[row, col] == '>')
+          {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
 
     /// <summary>
     /// write the current state of the grid output to the console
@@ -1063,7 +1502,7 @@ namespace ArtificialLife
         graphics.DrawLines( linePen, linePoints );
 
         // draw the sides        
-        graphics.DrawLines( linePen, sidePoints );
+        graphics.DrawLines( linePen, sidePoints );        
       }
     }
 
@@ -1225,6 +1664,20 @@ namespace ArtificialLife
     // Draw Delay Nodes
     //
 
+    private static void AddDelayText( Graphics graphics, int x, int y, int aDelay )
+    {
+      using(FontFamily fontFamily = new FontFamily( "Arial" ))
+      {
+        using(Font font = new Font( fontFamily, 26, FontStyle.Regular, GraphicsUnit.Pixel ))
+        {
+          using(SolidBrush solidBrush = new SolidBrush( Color.FromArgb( 255, 0, 0, 255 ) ))
+          {
+            graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
+            graphics.DrawString( aDelay.ToString(), font, solidBrush, new PointF( x, y + 2 ) );
+          }
+        }
+      }
+    }
 
     private static void DrawWestDelay(Graphics graphics, Pen linePen, int x, int y)
     {
@@ -1246,7 +1699,11 @@ namespace ArtificialLife
       Point[] sidePoints = GetWestSidePoints( y, midX, endX, endY );
 
       DrawDelay( graphics, linePen, linePoints, sidePoints );
+
+
+      AddDelayText( graphics, x + 8, y, 1 );
     }
+
     
     private static void DrawEastDelay(Graphics graphics, Pen linePen, int x, int y)
     {
@@ -1268,6 +1725,8 @@ namespace ArtificialLife
       Point[] sidePoints = GetEastSidePoints( x, y, midX, endY );
 
       DrawDelay( graphics, linePen, linePoints, sidePoints );
+
+      AddDelayText( graphics, x, y, 1 );
     }
 
 
@@ -1292,6 +1751,8 @@ namespace ArtificialLife
       Point[] sidePoints = GetNorthSidePoints( x, endX, midY, endY );
 
       DrawDelay( graphics, linePen, linePoints, sidePoints );
+
+      AddDelayText( graphics, x + 4, y, 1 );
     }
 
 
@@ -1315,6 +1776,8 @@ namespace ArtificialLife
       Point[] sidePoints = GetSouthSidePoints( x, y, endX, midY );
 
       DrawDelay( graphics, linePen, linePoints, sidePoints );
+
+      AddDelayText( graphics, x + 4, y, 1 );
     }
 
 

@@ -10,8 +10,8 @@ namespace ArtificialLife
 {
   class ChromosomeEvolution
   {
-    const int kPopulationSize = 10;
-    const int kMaxEvaluationCount = 1;
+    const int kPopulationSize = 50;
+    const int kMaxEvaluationCount = 100;
     const int kChromosomeLength = 10;
 
     public void StartEvolution()
@@ -116,9 +116,9 @@ namespace ArtificialLife
       int populationSize = (100 + (50 *  GetGeneValue(aChromosome, 3, 4)));
       int generations = (100 * (GetGeneValue(aChromosome, 3,7) + 1));
 
-      
+      int botType = 2;
 
-      Evolution evolution = new Evolution(gridSideLength, populationSize, generations);
+      Evolution evolution = new Evolution( gridSideLength, populationSize, generations, botType );
       evolution.StartEvolution();
 
 

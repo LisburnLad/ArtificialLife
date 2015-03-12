@@ -18,10 +18,11 @@ namespace ArtificialLife
       //chromosomeEvolution.EvaluateSpecificChromosome();
 
 
-      int gridSideLength = 5;
-      int populationSize = 100;
-      int generations = 100;
-      Evolution evolution = new Evolution(gridSideLength, populationSize, generations);
+      int gridSideLength = 6;
+      int populationSize = 2;
+      int generations = 1;
+      int botType = 2; // rules based chromosome
+      Evolution evolution = new Evolution( gridSideLength, populationSize, generations, botType );
       evolution.itsShowOnTerminate = true;
       //evolution.StartEvolution();
       evolution.EvaluateSpecificChromosome();
