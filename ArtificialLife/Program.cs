@@ -15,12 +15,12 @@ namespace ArtificialLife
 
       //ChromosomeEvolution chromosomeEvolution = new ChromosomeEvolution();
       //chromosomeEvolution.StartEvolution();
-      //chromosomeEvolution.EvaluateSpecificChromosome();
+      ////chromosomeEvolution.EvaluateSpecificChromosome();
 
 
-      int gridSideLength = 6;
-      int populationSize = 20000;
-      int generations = 20000;
+      int gridSideLength = 7;
+      int populationSize = 2000;
+      int generations = 4000;
       int botType = 2; // rules based chromosome
       Evolution evolution = new Evolution( gridSideLength, populationSize, generations, botType );
       evolution.itsShowOnTerminate = true;

@@ -2085,21 +2085,6 @@ namespace ArtificialLife
     // Draw Delay Nodes
     //
 
-    private static void AddDelayText( Graphics graphics, int x, int y, int aDelay )
-    {
-      using(FontFamily fontFamily = new FontFamily( "Arial" ))
-      {
-        using(Font font = new Font( fontFamily, 26, FontStyle.Regular, GraphicsUnit.Pixel ))
-        {
-          using(SolidBrush solidBrush = new SolidBrush( Color.FromArgb( 255, 0, 0, 255 ) ))
-          {
-            graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
-            graphics.DrawString( aDelay.ToString(), font, solidBrush, new PointF( x, y + 2 ) );
-          }
-        }
-      }
-    }
-
     private static void DrawWestDelay(Graphics graphics, Pen linePen, int x, int y)
     {
       int mid = 16;
@@ -2120,9 +2105,6 @@ namespace ArtificialLife
       Point[] sidePoints = GetWestSidePoints( y, midX, endX, endY );
 
       DrawDelay( graphics, linePen, linePoints, sidePoints );
-
-
-      AddDelayText( graphics, x + 8, y, 1 );
     }
 
     
@@ -2146,8 +2128,6 @@ namespace ArtificialLife
       Point[] sidePoints = GetEastSidePoints( x, y, midX, endY );
 
       DrawDelay( graphics, linePen, linePoints, sidePoints );
-
-      AddDelayText( graphics, x, y, 1 );
     }
 
 
@@ -2172,8 +2152,6 @@ namespace ArtificialLife
       Point[] sidePoints = GetNorthSidePoints( x, endX, midY, endY );
 
       DrawDelay( graphics, linePen, linePoints, sidePoints );
-
-      AddDelayText( graphics, x + 4, y, 1 );
     }
 
 
@@ -2197,8 +2175,6 @@ namespace ArtificialLife
       Point[] sidePoints = GetSouthSidePoints( x, y, endX, midY );
 
       DrawDelay( graphics, linePen, linePoints, sidePoints );
-
-      AddDelayText( graphics, x + 4, y, 1 );
     }
 
 
