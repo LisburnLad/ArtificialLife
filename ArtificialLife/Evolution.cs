@@ -28,8 +28,8 @@ namespace ArtificialLife
     
     public void StartEvolution()
     {
-      const double crossoverProbability = 0.65;
-      const double mutationProbability = 0.08;
+      const double crossoverProbability = 0.75;
+      const double mutationProbability = 0.10;
       const int elitismPercentage = 5;
 
       int chromosomeLength = Bot.GetChromosomeLength(itsSideLength,itsBotType);
@@ -42,7 +42,7 @@ namespace ArtificialLife
 
       var crossover = new Crossover( crossoverProbability, true )
       {
-        CrossoverType = CrossoverType.SinglePoint
+        CrossoverType = CrossoverType.DoublePoint
       };
 
       var mutation = new BinaryMutate( mutationProbability, true );
@@ -81,6 +81,8 @@ namespace ArtificialLife
 
         Console.WriteLine( "Final Chromosome Fitmess: " + fitness );
         Console.WriteLine( "Evaluations: " + e.Evaluations );
+
+        Console.WriteLine( "Chromosome: " + chromosome.ToBinaryString() );
       }
 
       itsFitness = chromosome.Fitness;
@@ -216,8 +218,11 @@ namespace ArtificialLife
                                "110011" +   // rule B - LC, F-, RC
                                "100000";    // rule C - LB, F-, R-
 
-      Chromosome chromosome = new Chromosome( testChromosome3 );
-      CreateAndEvaluateBot(  chromosome, sideLength2, 2, true );
+      int sideLength3 = 11;
+      string testChromosome4 = "111101001001000101110000011011011110111";
+
+      Chromosome chromosome = new Chromosome( testChromosome4 );
+      CreateAndEvaluateBot(  chromosome, sideLength3, 2, true );
     }
 
     /// <summary>
@@ -231,7 +236,8 @@ namespace ArtificialLife
       //Test currentTest = new TestStraightLineMove();
       //Test currentTest = new TestDiagonalMove();
       //Test currentTest = new TestForMoveAndStop();
-      Test currentTest = new TestForFastMoveAndStop();
+      //Test currentTest = new TestForFastMoveAndStop();
+      Test currentTest = new TestForMoveThereAndBack();
 
       // create the bot
       Bot bot = new Bot( chromosome, currentTest, aSideLength, aBotType, aShowGrid );

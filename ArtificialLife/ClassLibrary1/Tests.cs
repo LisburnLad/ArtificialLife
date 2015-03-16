@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ArtificialLife
 {
-  class Test
+  public class Test
   {
     protected int kNumberOfPasses = 20;
     public int itsScore { get; set; }
@@ -103,7 +103,7 @@ namespace ArtificialLife
   /// <summary>
   /// Test bots in a simple maze, where its fitness depends on movement around this maze
   /// </summary>
-  class MazeTest : Test
+  public class MazeTest : Test
   {
     public int itsCol { get; set; }
     public int itsRow { get; set; }
@@ -285,7 +285,7 @@ namespace ArtificialLife
   /// The best bots are those that get the furthest distance across the maze,
   /// so a bot's score is simply the horizontal position.
   /// </summary>
-  class TestStraightLineMove : MazeTest
+  public class TestStraightLineMove : MazeTest
   {
     public TestStraightLineMove() : base(10,0)
     {
@@ -369,7 +369,7 @@ namespace ArtificialLife
 
     protected override void UpdateScore(int aPass, bool aShowGrid)
     {
-      // check that the horizontal position has changed
+      // check that the vertical position hasn't changed
       if( itsRow == itsInitialRow )
       {
         // increase the itsScore while the bot is moving towards the middle of the maze
@@ -401,6 +401,64 @@ namespace ArtificialLife
       }
 
       return (double)(itsScore) / 155.0;
+    }
+  }
+
+
+  /// <summary>
+  /// reward the bot for moving to the middle square and back again
+  /// </summary>
+  public class TestForMoveThereAndBack : MazeTest
+  {
+    private int itsPreviousCol = 0;
+
+    public TestForMoveThereAndBack()
+      : base( 10, 0 )
+    {
+    }
+
+    protected override void UpdateScore( int aPass, bool aShowGrid )
+    {
+      //Console.WriteLine( "Col: " + itsCol );
+
+      // check that the vertical position hasn't changed
+      if(itsRow == itsInitialRow)
+      {
+        if(aPass <= 11)
+        {
+          // increase the score while the bot is moving towards the middle of the maze
+          if(itsCol > itsPreviousCol)
+          {
+            itsScore += 5;
+
+            itsPreviousCol = itsCol;
+          }
+        }
+        else
+        {
+          if(itsCol < itsPreviousCol)
+          {
+            itsScore += 5;
+
+            itsPreviousCol = itsCol;
+          }
+        }
+      }
+
+      if(aShowGrid)
+      {
+        Console.WriteLine( "Score: " + itsScore + " (row = " + itsRow + ", col = " + itsCol + ")" );
+      }
+    }
+
+    public override double GetFinalScore( bool aShowGrid )
+    {
+      if(aShowGrid)
+      {
+        Console.WriteLine( "Final Score: " + itsScore );
+      }
+
+      return (double)(itsScore) / 100.0;
     }
   }
 

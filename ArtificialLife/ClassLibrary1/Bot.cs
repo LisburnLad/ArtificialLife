@@ -10,7 +10,7 @@ using System.Drawing.Text;
 
 namespace ArtificialLife
 {
-  class Bot
+  public class Bot
   {
     static int itsGeneLength = 5;
 
@@ -116,7 +116,7 @@ namespace ArtificialLife
     {
       if(aBotType == 2)
       {
-        return 21;
+        return 39;
       }
 
       return ((aSideLength * aSideLength) * itsGeneLength);
@@ -185,8 +185,11 @@ namespace ArtificialLife
           CellType startType = (type == 0 ? CellType.NorthNode : CellType.NorthDelay) + direction;
         
           // get the rules defined by the chromosome
-          int[,] rules = new int[3, 3];
-          for(int rule = 0; rule < 3; rule++)
+          // - 3 type specific rules: A,B and C
+          // - 3 edge rules when coming to touch edge of grid
+          int kNumberOfRules = 6;
+          int[,] rules = new int[kNumberOfRules, 3];
+          for (int rule = 0; rule < kNumberOfRules; rule++)
           {
             int leftType = GetGeneValue( ref position, 2 );
             int centerType = GetGeneValue( ref position, 2 );
@@ -200,13 +203,16 @@ namespace ArtificialLife
           // show the rules
           if(aShowGrid)
           {
-            for(int rule = 0; rule < 3; rule++)
+            for (int rule = 0; rule < kNumberOfRules; rule++)
             {
               switch(rule)
               {
                 case 0: Console.Write( "A -> " ); break;
                 case 1: Console.Write( "B -> " ); break;
                 case 2: Console.Write( "C -> " ); break;
+                case 3: Console.Write("Edge A -> "); break;
+                case 4: Console.Write("Edge B -> "); break;
+                case 5: Console.Write("Edge C -> "); break;
               }
 
               for(int outDirection = 0; outDirection < 3; outDirection++)
@@ -290,18 +296,60 @@ namespace ArtificialLife
       if(itsGrid[aRow, aCol] >= CellType.NorthNode && itsGrid[aRow, aCol] <= CellType.WestNode)
       {
         // the source cell contains a node
-        CreateCellsFromRule(aRules, aRow, aCol, aDirection, 0);
+
+        // test if an edge rule should be applied
+        if (TestForEdgeCell(aRow, aCol, aDirection))
+        {
+          CreateCellsFromRule(aRules, aRow, aCol, aDirection, 3);
+        }
+        else
+        {
+          CreateCellsFromRule(aRules, aRow, aCol, aDirection, 0);
+        }
       }
       else if(itsGrid[aRow, aCol] >= CellType.NorthDelay && itsGrid[aRow, aCol] <= CellType.WestDelay)
       {
         // the source cell contains a delay
-        CreateCellsFromRule(aRules, aRow, aCol, aDirection, 1);
+
+        // test if an edge rule should be applied
+        if (TestForEdgeCell(aRow, aCol, aDirection))
+        {
+          CreateCellsFromRule(aRules, aRow, aCol, aDirection, 4);
+        }
+        else
+        {
+          CreateCellsFromRule(aRules, aRow, aCol, aDirection, 1);
+        }
       }
       else
       {
         // the source cell must contain a connection
-        CreateCellsFromRule(aRules, aRow, aCol, aDirection, 2);
+
+        // test if an edge rule should be applied
+        if (TestForEdgeCell(aRow, aCol, aDirection))
+        {
+          CreateCellsFromRule(aRules, aRow, aCol, aDirection, 5);
+        }
+        else
+        {
+          CreateCellsFromRule(aRules, aRow, aCol, aDirection, 2);
+        }
       }
+    }
+
+    /// <summary>
+    /// test if the output of the specified cell will be into a cell on the edge of the grid, or off the grid
+    /// </summary>
+    /// <param name="aRow"></param>
+    /// <param name="aCol"></param>
+    /// <param name="aDirection"></param>
+    /// <returns></returns>
+    private bool TestForEdgeCell(int aRow, int aCol, Direction aDirection)
+    {
+      return aDirection == Direction.North && aRow <= 1
+          || aDirection == Direction.South && aRow >= (itsSideLength - 2)
+          || aDirection == Direction.West && aCol <= 1
+          || aDirection == Direction.East && aCol >= (itsSideLength - 2);
     }
 
     private void CreateCellsFromRule(int[,] aRules, int aRow, int aCol, Direction aDirection, int ruleNumber)
@@ -940,7 +988,7 @@ namespace ArtificialLife
     /// <summary>
     /// allocate and initialize the output array
     /// </summary>
-    private void InitializeOutput()
+    public void InitializeOutput()
     {
       itsOutput = new char[itsSideLength, itsSideLength];
 
@@ -961,15 +1009,30 @@ namespace ArtificialLife
       }
     }
 
+    
+
+    public event TestBotHandler BotEvent;
+
+    private void FireEvent( int aRow, int aCol )
+    {
+      BotEvent botEvent = new BotEvent();
+      botEvent.Row = aRow;
+      botEvent.Col = aCol;
+
+      if(BotEvent != null)
+      {
+        BotEvent( this, botEvent );
+      }
+
+      botEvent = null;
+    } 
 
     private double TestBot( bool aShowGrid )
     {
       int pass = 0;
       for(; pass < itsTest.GetNumberOfPasses(); pass++)
       {
-        EvaluateGrid( pass, aShowGrid );
-
-        itsTest.EvaluateOutput( itsOutput, itsSideLength, pass, aShowGrid );
+        TestBotForOnePass( aShowGrid, pass );      
       }
 
       if(aShowGrid)
@@ -978,6 +1041,15 @@ namespace ArtificialLife
       }
 
       return itsTest.GetFinalScore( aShowGrid );
+    }
+
+    public void TestBotForOnePass( bool aShowGrid, int pass )
+    {
+      EvaluateGrid( pass, aShowGrid );
+
+      itsTest.EvaluateOutput( itsOutput, itsSideLength, pass, aShowGrid );
+
+      FireEvent( ((MazeTest)(itsTest)).itsRow, ((MazeTest)(itsTest)).itsCol );
     }
 
     /// <summary>

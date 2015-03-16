@@ -4,16 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{33B9ECDB-812C-44F3-A536-E809E1D72F38}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{6885A1E8-B378-4CB0-9D99-385B3F5DBCCF}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ArtificialLife</RootNamespace>
-    <AssemblyName>ArtificialLife</AssemblyName>
+    <AssemblyName>ArtificialLifeLibrary</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -33,7 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="GAF">
-      <HintPath>packages\GAF.2.0.1\lib\net40\GAF.dll</HintPath>
+      <HintPath>..\packages\GAF.2.0.1\lib\net40\GAF.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -45,20 +43,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ChromosomeEvolution.cs" />
-    <Compile Include="Evolution.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="Bot.cs" />
+    <Compile Include="BotEvent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="ClassLibrary1\ArtificialLifeLibrary.csproj">
-      <Project>{6885a1e8-b378-4cb0-9d99-385b3f5dbccf}</Project>
-      <Name>ArtificialLifeLibrary</Name>
-    </ProjectReference>
+    <Compile Include="Tests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
