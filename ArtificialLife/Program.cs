@@ -19,13 +19,13 @@ namespace ArtificialLife
 
 
       int gridSideLength = 11;
-      int populationSize = 1000;
-      int generations = 20000;
+      int populationSize = 4000;
+      int generations = 10000;
       int botType = 2; // rules based chromosome
       Evolution evolution = new Evolution( gridSideLength, populationSize, generations, botType );
       evolution.itsShowOnTerminate = true;
-      //evolution.StartEvolution();
-      evolution.EvaluateSpecificChromosome();
+      evolution.StartEvolution();
+      //evolution.EvaluateSpecificChromosome();
 
       Console.ReadLine();
     }

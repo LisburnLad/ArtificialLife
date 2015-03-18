@@ -237,7 +237,8 @@ namespace ArtificialLife
       //Test currentTest = new TestDiagonalMove();
       //Test currentTest = new TestForMoveAndStop();
       //Test currentTest = new TestForFastMoveAndStop();
-      Test currentTest = new TestForMoveThereAndBack();
+      //Test currentTest = new TestForMoveThereAndBack();
+      Test currentTest = new TestRunningInCircles();
 
       // create the bot
       Bot bot = new Bot( chromosome, currentTest, aSideLength, aBotType, aShowGrid );

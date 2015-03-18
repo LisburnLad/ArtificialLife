@@ -187,10 +187,13 @@ namespace WindowsFormsApplication1
     public static void EvaluateSpecificChromosome( object botEventHandler )
     {
       int sideLength3 = 11;
-      string testChromosome4 = "111101001001000101110000011011011110111";
+      //string thereAndBack = "111101001001000101110000011011011110111";
 
-      Chromosome chromosome = new Chromosome( testChromosome4 );
-      CreateAndEvaluateBot( chromosome, sideLength3, 2, true, (TestBotHandler)botEventHandler );
+
+      string runInCircles = "1001001001011001011110100010110100110010110";
+
+      Chromosome chromosome = new Chromosome( runInCircles );
+      CreateAndEvaluateBot( chromosome, sideLength3, 2, true, (TestBotHandler)botEventHandler);
     }
 
     /// <summary>
@@ -198,14 +201,15 @@ namespace WindowsFormsApplication1
     /// </summary>
     /// <param name="chromosome"></param>
     /// <returns></returns>
-    private static void CreateAndEvaluateBot( Chromosome chromosome, int aSideLength, int aBotType, bool aShowGrid, TestBotHandler botEventHandler )
+    private static void CreateAndEvaluateBot( Chromosome chromosome, int aSideLength, int aBotType, bool aShowGrid, TestBotHandler botEventHandler)
     {
       // create the test that the bot is to perform
       //Test currentTest = new TestStraightLineMove();
       //Test currentTest = new TestDiagonalMove();
       //Test currentTest = new TestForMoveAndStop();
       //Test currentTest = new TestForFastMoveAndStop();
-      Test currentTest = new TestForMoveThereAndBack();
+      //Test currentTest = new TestForMoveThereAndBack();
+      Test currentTest = new TestRunningInCircles();
       
       // create the bot
       Bot bot = new Bot( chromosome, currentTest, aSideLength, aBotType, aShowGrid );

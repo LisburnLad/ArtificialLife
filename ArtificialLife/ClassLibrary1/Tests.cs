@@ -462,4 +462,162 @@ namespace ArtificialLife
     }
   }
 
+  /// <summary>
+  /// reward the bot for moving in a circle
+  /// </summary>
+  public class TestRunningInCircles : MazeTest
+  {
+    private int itsPreviousCol = 5;
+    private int itsPreviousRow = 5;
+
+    private bool itsMovedRight = false;
+    private bool itsMovedDown = false;
+    private bool itsMovedLeft = false;
+    private bool itsMovedUp = false;
+
+    private int itsRightCol = 0;
+
+    public TestRunningInCircles()
+      : base( 5, 5 )
+    {
+    }
+
+    //protected override void UpdateScore( int aPass, bool aShowGrid )
+    //{
+    //  if(itsCol > itsPreviousCol)
+    //  {
+    //    if(itsMovedRight == false)
+    //    {
+    //      itsScore += 25;
+    //      itsMovedRight = true;
+    //    }
+    //  }
+
+    //  if(itsCol < itsPreviousCol)
+    //  {
+    //    if(itsMovedLeft == false)
+    //    {
+    //      itsScore += 25;
+    //      itsMovedLeft = true;
+    //    }
+    //  }
+
+    //  if(itsRow > itsPreviousRow)
+    //  {
+    //    if(itsMovedDown == false)
+    //    {
+    //      itsScore += 25;
+    //      itsMovedDown = true;
+    //    }
+    //  }
+
+    //  if(itsRow < itsPreviousRow)
+    //  {
+    //    if(itsMovedUp == false)
+    //    {
+    //      itsScore += 25;
+    //      itsMovedUp = true;
+    //    }
+    //  }
+    //}
+
+    protected override void UpdateScore( int aPass, bool aShowGrid )
+    {
+      if( aPass < 5 )
+      {
+      // check that the vertical position hasn't changed
+      //if(itsRow == itsInitialRow && itsMovedRight == false)
+      //{
+      // increase the score while the bot is moving towards the RHS of the maze
+      if(itsCol > itsPreviousCol && itsMovedRight == false)
+      {
+        itsPreviousCol = itsCol;
+
+        // set the flag to show that a movement to the right has taken place
+        if(itsCol > itsInitialCol + 3)
+        {
+          itsScore += 5;
+          itsMovedRight = true;
+        }
+      }
+      }
+      //}
+      else if (aPass >= 5 && aPass < 10 && itsMovedRight)
+      //else if(itsMovedRight)
+      {
+        // check that the horizontal position hasn't changed
+        //if(itsCol == itsPreviousCol)
+        //{
+        // increase the score while the bot is moving towards the bottom of the maze
+        if(itsRow > itsPreviousRow)
+        {
+          //itsScore += 5;
+
+          itsPreviousRow = itsRow;
+
+          if(itsRow > itsInitialRow + 3)
+          {
+            itsScore += 7;
+            itsMovedDown = true;
+          }
+
+          itsRightCol = itsCol;
+        }
+        //}
+      }
+      else if (aPass >= 10 && aPass < 15 && itsMovedDown)
+      //else if(itsMovedDown)
+      {
+        // check that the vertical position hasn't changed
+        //if(itsRow == itsPreviousRow)
+        //{
+        // increase the score while the bot is moving towards the LHS of the maze
+        if(itsCol < itsPreviousCol)
+        {
+          //itsScore += 5;
+
+          itsPreviousCol = itsCol;
+
+          if(itsCol < itsRightCol)
+          {
+            itsScore = 75;
+            itsMovedLeft = true;
+          }
+        }
+        //}
+      }
+      else if (aPass >= 15 && aPass <= 20 && itsMovedLeft)
+      //else if(itsMovedLeft)
+      {
+        // check that the horizontal position hasn't changed
+        //if(itsCol == itsPreviousCol)
+        //{
+        // increase the score while the bot is moving towards the top of the maze
+        if(itsRow < itsPreviousRow)
+        {
+          itsScore = 100;
+
+          itsPreviousRow = itsRow;
+        }
+        //}
+      }
+
+      if(aShowGrid)
+      {
+        Console.WriteLine( "Score: " + itsScore + " (row = " + itsRow + ", col = " + itsCol + ")" );
+      }
+    }
+
+    public override double GetFinalScore( bool aShowGrid )
+    {
+      if(aShowGrid)
+      {
+        Console.WriteLine( "Final Score: " + itsScore );
+      }
+
+      return (double)(itsScore) / 100.0;
+    }
+  }
+
+
 }

@@ -116,7 +116,7 @@ namespace ArtificialLife
     {
       if(aBotType == 2)
       {
-        return 39;
+        return 43;
       }
 
       return ((aSideLength * aSideLength) * itsGeneLength);
@@ -181,6 +181,10 @@ namespace ArtificialLife
           int direction = GetGeneValue( ref position, 2 );
           int type = GetGeneValue( ref position, 1 );
 
+          // get the starting point for the initial cell
+          int startRow = GetGeneValue( ref position, 2 );
+          int startCol = GetGeneValue( ref position, 2 );
+
           // put this node into the center cell
           CellType startType = (type == 0 ? CellType.NorthNode : CellType.NorthDelay) + direction;
         
@@ -237,8 +241,8 @@ namespace ArtificialLife
             }
           }
 
-          int row = itsSideLength/2;
-          int col = itsSideLength / 2;
+          int row = ( startRow == 0 ) ? 0 : ((itsSideLength-1)/startRow);
+          int col = ( startCol == 0 ) ? 0 : ((itsSideLength-1)/startCol);
           itsGrid[row, col] = startType;
 
           ApplyRules( rules, row, col, (Direction.North + direction) );
