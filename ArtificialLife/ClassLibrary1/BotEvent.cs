@@ -10,6 +10,7 @@ namespace ArtificialLife
 
   public class BotEvent : EventArgs
   {
+    public int Step { get; set; }
     public int Row { get; set; }
     public int Col { get; set; }
   }

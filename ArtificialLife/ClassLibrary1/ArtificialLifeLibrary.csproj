@@ -30,8 +30,20 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Appccelerate.EventBroker">
+      <HintPath>..\packages\Appccelerate.EventBroker.3.15.0\lib\net45\Appccelerate.EventBroker.dll</HintPath>
+    </Reference>
+    <Reference Include="Appccelerate.Fundamentals">
+      <HintPath>..\packages\Appccelerate.Fundamentals.2.8.0\lib\portable-windows8+net45\Appccelerate.Fundamentals.dll</HintPath>
+    </Reference>
     <Reference Include="GAF">
       <HintPath>..\packages\GAF.2.0.1\lib\net40\GAF.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.Common">
+      <HintPath>..\packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45\Microsoft.Practices.EnterpriseLibrary.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.EnterpriseLibrary.Logging">
+      <HintPath>..\packages\EnterpriseLibrary.Logging.6.0.1304.0\lib\NET45\Microsoft.Practices.EnterpriseLibrary.Logging.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -43,10 +55,47 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArtificialLifeProperties.cs" />
     <Compile Include="Bot.cs" />
+    <Compile Include="BotBase.cs" />
+    <Compile Include="BotDraw.cs" />
     <Compile Include="BotEvent.cs" />
+    <Compile Include="BotProcess.cs" />
+    <Compile Include="BotStructure.cs" />
+    <Compile Include="ChromosomeDecode.cs" />
+    <Compile Include="ChromosomeEvolution.cs" />
+    <Compile Include="Common.cs" />
+    <Compile Include="Evolution.cs" />
+    <Compile Include="NodeBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NodeConnection.cs" />
+    <Compile Include="NodeConnectionEnd.cs" />
+    <Compile Include="NodeConnectionStart.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NodeDelay.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NodeEventArgs.cs" />
+    <Compile Include="NodeInput.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NodeNand.cs" />
+    <Compile Include="NodePulse.cs" />
+    <Compile Include="NodeOr.cs" />
+    <Compile Include="NodeOutput.cs" />
+    <Compile Include="NodeTrigger.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NodeXor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SortedList.cs" />
+    <Compile Include="TargetedConnection.cs" />
     <Compile Include="Tests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

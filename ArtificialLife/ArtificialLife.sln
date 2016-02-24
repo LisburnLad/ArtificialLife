@@ -5,7 +5,37 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtificialLife", "Artificia
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtificialLifeLibrary", "ClassLibrary1\ArtificialLifeLibrary.csproj", "{6885A1E8-B378-4CB0-9D99-385B3F5DBCCF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MazeTester", "..\MazeTester\MazeTester.csproj", "{3FBCCFA4-F8C7-4286-A3F4-9C06D9C94071}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MazeTester", "MazeTester\MazeTester.csproj", "{3FBCCFA4-F8C7-4286-A3F4-9C06D9C94071}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtificialLifeUnitTests", "ArtificialLifeUnitTests\ArtificialLifeUnitTests.csproj", "{A9F0170F-D0DB-4972-9DD2-31A9C0039642}"
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "CanvasSite", "http://localhost:56462", "{938770A6-79A0-4240-985A-1A8878F62598}"
+	ProjectSection(WebsiteProperties) = preProject
+		UseIISExpress = "true"
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_56462"
+		Debug.AspNetCompiler.PhysicalPath = "CanvasSite\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_56462\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_56462"
+		Release.AspNetCompiler.PhysicalPath = "CanvasSite\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_56462\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		SlnRelativePath = "CanvasSite\"
+		DefaultWebSiteLanguage = "Visual C#"
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B39E74CE-CE0B-47AB-8F93-5039C295DAC8}"
+	ProjectSection(SolutionItems) = preProject
+		Performance1.psess = Performance1.psess
+		Performance2.psess = Performance2.psess
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,8 +55,19 @@ Global
 		{3FBCCFA4-F8C7-4286-A3F4-9C06D9C94071}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3FBCCFA4-F8C7-4286-A3F4-9C06D9C94071}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3FBCCFA4-F8C7-4286-A3F4-9C06D9C94071}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9F0170F-D0DB-4972-9DD2-31A9C0039642}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9F0170F-D0DB-4972-9DD2-31A9C0039642}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9F0170F-D0DB-4972-9DD2-31A9C0039642}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9F0170F-D0DB-4972-9DD2-31A9C0039642}.Release|Any CPU.Build.0 = Release|Any CPU
+		{938770A6-79A0-4240-985A-1A8878F62598}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{938770A6-79A0-4240-985A-1A8878F62598}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{938770A6-79A0-4240-985A-1A8878F62598}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{938770A6-79A0-4240-985A-1A8878F62598}.Release|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45;packages\EnterpriseLibrary.Logging.6.0.1304.0\lib\NET45
 	EndGlobalSection
 EndGlobal
